@@ -1,5 +1,6 @@
 """test_training.py - Unit and regression tests for scenario generation, splits, and training."""
 
+import json
 from pathlib import Path
 import numpy as np
 import pytest
@@ -13,6 +14,8 @@ from training.scenario_generator import (
     M1_FEATURES,
     M2_FEATURES,
     OBSERVABLE_FEATURES,
+    SensorView,
+    generate_data_quality_report,
     generate_full_dataset,
     split_dataset_by_scenario,
 )
@@ -60,7 +63,16 @@ def test_new_simulator_options_backward_compatibility(calibrated_facilities) -> 
     from core.contracts import FacilityState
 
     setp = (fac.min_temp_c + fac.max_safe_temp_c) / 2.0
-    state = FacilityState(facility_id=fac.id, temp_c=setp, outside_temp_c=35.0, humidity_pct=50.0, product_load_fraction=0.85, door_openings_per_hour=0.0, compressor_on=False, sensor_ok=True)
+    state = FacilityState(
+        facility_id=fac.id,
+        temp_c=setp,
+        outside_temp_c=35.0,
+        humidity_pct=50.0,
+        product_load_fraction=0.85,
+        door_openings_per_hour=0.0,
+        compressor_on=False,
+        sensor_ok=True,
+    )
 
     # 1. Default run
     df_def = simulate_temperature(fac, state, duration_min=30)
@@ -68,7 +80,9 @@ def test_new_simulator_options_backward_compatibility(calibrated_facilities) -> 
 
     # 2. Initial temperature overrides
     df_over = simulate_temperature(
-        fac, state, duration_min=30,
+        fac,
+        state,
+        duration_min=30,
         initial_air_temp_c=-15.0,
         initial_product_temp_c=-14.0,
     )
@@ -99,3 +113,93 @@ def test_dataset_reproducibility_and_stratified_splits(calibrated_facilities) ->
     assert s_tr.isdisjoint(s_cal)
     assert s_tr.isdisjoint(s_te)
     assert s_cal.isdisjoint(s_te)
+
+
+def test_sensor_view_leak_guard() -> None:
+    """Requirement c: SensorView strictly isolates hidden states and raises on forbidden access."""
+    view = SensorView(
+        sensor_air_temp_c=-18.0,
+        lag_0=-18.0,
+        lag_1=-18.1,
+        lag_2=-18.2,
+        lag_5=-18.3,
+        lag_10=-18.4,
+        lag_15=-18.5,
+        lag_30=-18.6,
+        lag_60=-18.8,
+        slope_5min=0.06,
+        slope_15min=0.033,
+        min_30min=-18.6,
+        max_30min=-18.0,
+        compressor_on=1.0,
+        minutes_in_compressor_state=12,
+        minutes_since_curtailment=600.0,
+        outside_temp_c=35.0,
+        humidity_pct=60.0,
+        product_load_fraction=0.85,
+        door_rate=2.0,
+        rated_power_kw=120.0,
+        setpoint_c=-19.0,
+        max_safe_temp_c=-15.0,
+        min_temp_c=-23.0,
+        thermal_mass=250.0,
+        insulation_r=0.08,
+        headroom_c=3.0,
+        phase="cut_in",
+        has_dropout_burst=False,
+        dropout_burst_len=0,
+    )
+    # Observable features dict should match OBSERVABLE_FEATURES
+    feat_dict = view.to_feature_dict()
+    assert set(feat_dict.keys()) == set(OBSERVABLE_FEATURES)
+
+    # Attempting to access forbidden hidden attributes raises AttributeError
+    with pytest.raises(AttributeError, match="LeakGuardBlocked"):
+        _ = view.product_temp_c
+
+    with pytest.raises(AttributeError, match="LeakGuardBlocked"):
+        _ = view.true_temp_c
+
+    with pytest.raises(AttributeError, match="LeakGuardBlocked"):
+        _ = view.disturbance
+
+
+def test_phase_stratification_and_censoring(calibrated_facilities) -> None:
+    """Verify phase-stratified sampling and label censoring flags."""
+    df = generate_full_dataset(calibrated_facilities[:2], n_scenarios=4, records_per_scenario=6, base_seed=42, n_jobs=1)
+
+    assert "phase" in df.columns
+    assert "is_right_censored" in df.columns
+    assert "is_left_censored" in df.columns
+    assert "has_dropout_burst" in df.columns
+
+    phases = set(df["phase"].unique())
+    assert phases.issubset({"cut_in", "cut_out", "mid_cycle"})
+    assert len(phases) >= 2
+
+
+def test_data_quality_report_generation(tmp_path: Path, calibrated_facilities) -> None:
+    """Verify generation of data_quality_report.csv and data_quality_report.md."""
+    df = generate_full_dataset(calibrated_facilities[:2], n_scenarios=2, records_per_scenario=3, base_seed=42, n_jobs=1)
+    q_df, md_content = generate_data_quality_report(df, tmp_path)
+
+    assert (tmp_path / "data_quality_report.csv").is_file()
+    assert (tmp_path / "data_quality_report.md").is_file()
+    assert "Phase-Stratified Sampling Audit" in md_content
+    assert "Label Censoring Analysis" in md_content
+    assert "SensorView Leak-Guard Audit" in md_content
+
+
+def test_hybrid_mae_superiority_to_physics() -> None:
+    """Requirement f: On the held-out test split, Hybrid MAE <= Physics-only MAE."""
+    project_root = Path(__file__).resolve().parent.parent
+    meta_path = project_root / "models" / "artifacts" / "metadata.json"
+    if not meta_path.is_file():
+        pytest.skip("Models not yet trained; skipping hybrid MAE test.")
+
+    with open(meta_path, "r", encoding="utf-8") as f:
+        meta = json.load(f)
+
+    m0_mae = meta["headline_metrics"]["overall_m0_physics_mae"]
+    m2_mae = meta["headline_metrics"]["overall_m2_hybrid_mae"]
+    assert m2_mae <= m0_mae, f"Hybrid MAE ({m2_mae:.3f}) exceeded Physics MAE ({m0_mae:.3f})!"

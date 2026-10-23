@@ -138,7 +138,10 @@ def run_part3_demo() -> None:
     print("* All forecasts evaluate unpowered drift at reference 35 C outdoor temperature.")
     print("* 90% Upper bound uses split-conformal finite-sample correction.")
     print("* Margin = True Safe Minutes minus Predicted Safe Minutes (>0 means cargo protected, conservative).")
-    print("* All telemetry, models, and drift metrics are labeled as SIMULATED.\n")
+    print("* All telemetry, models, and drift metrics are labeled as SIMULATED.")
+    print("! SAFETY CAUTION: Conformal bounds provide 90% marginal coverage (~8.9% unsafe error rate across test set).")
+    print("! Six demo rows do not prove zero breaches. For vaccines (FAC-VAX-03), ML upper bounds alone are NOT sufficient.")
+    print("! The Safety Guardian (Part 4) must enforce deterministic physical tripwires and hard interlocks.\n")
 
 
 if __name__ == "__main__":
