@@ -1,0 +1,12 @@
+# Chill2Grid AI - Dependencies
+# IEEE ClimateChange Global Hackathon: Green Energy Optimization through Data Analytics
+# Compatible with Python 3.11+
+
+numpy>=1.26.0
+pandas>=2.0.0
+scikit-learn>=1.4.0
+scipy>=1.11.0
+joblib>=1.3.0
+streamlit>=1.30.0
+plotly>=5.18.0
+pytest>=8.0.0

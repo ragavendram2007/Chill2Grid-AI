@@ -1,0 +1,20 @@
+{
+  "n_scenarios": 60,
+  "total_rows": 21600,
+  "horizons": [
+    5,
+    10,
+    15,
+    20,
+    25,
+    30,
+    40,
+    50,
+    60,
+    75,
+    90,
+    120
+  ],
+  "n_observable_features": 26,
+  "base_seed": 42
+}

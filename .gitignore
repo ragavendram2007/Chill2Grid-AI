@@ -1,0 +1,22 @@
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Python caches & test artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Scratch scripts
+scratch/
+
+# Runtime output directory
+outputs/
+
+# Serialized ML model weights
+*.joblib

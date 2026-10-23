@@ -1,0 +1,7 @@
+facility_id,name,product_type,thermal_mass_kwh_per_c,insulation_r_deg_c_per_kw,rated_power_kw,min_temp_c,max_safe_temp_c,min_on_min,min_off_min,cop_nominal
+FAC-FZN-01,Apex Cold Hub - Frozen Meat & Veg,Frozen Food,45.0,0.35,220.0,-22.0,-18.0,10,5,2.4
+FAC-ICE-02,Polar Arctic Ice Cream Logistics,Ice Cream,25.0,0.40,120.0,-26.0,-22.0,12,6,2.1
+FAC-VAX-03,BioCare National Pharma Vault,Vaccines & Pharmaceuticals,14.0,0.50,45.0,2.0,6.5,8,4,3.0
+FAC-PRD-04,Kisan Mega Fresh Agricultural Terminal,Fresh Produce,65.0,0.28,310.0,1.0,5.5,15,8,3.2
+FAC-SEA-05,OceanBreeze Port Marine Export Hub,Seafood & Marine Export,38.0,0.32,180.0,-24.0,-19.0,10,5,2.3
+FAC-MLK-06,Ganga Valley Cooperative Dairy Plant,Dairy & Chilled Milk,20.0,0.38,85.0,1.5,4.0,10,5,3.1
