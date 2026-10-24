@@ -1,10 +1,10 @@
 {
   "model_version": "1.1.0",
-  "created_at_utc": "2026-10-23T18:55:14.445820+00:00",
+  "created_at_utc": "2026-10-24T06:59:40.748013+00:00",
   "python_version": "3.14.3",
   "sklearn_version": "1.8.0",
   "base_seed": 42,
-  "n_scenarios": 60,
+  "n_scenarios": 500,
   "observable_features": [
     "lag_0",
     "lag_1",
@@ -31,7 +31,10 @@
     "min_temp_c",
     "thermal_mass",
     "insulation_r",
-    "headroom_c"
+    "headroom_c",
+    "(sensor_air - setpoint)/deadband",
+    "n_missing_last_30",
+    "max_gap_last_30"
   ],
   "m1_features": [
     "lag_0",
@@ -60,6 +63,9 @@
     "thermal_mass",
     "insulation_r",
     "headroom_c",
+    "(sensor_air - setpoint)/deadband",
+    "n_missing_last_30",
+    "max_gap_last_30",
     "horizon_min"
   ],
   "m2_features": [
@@ -89,6 +95,9 @@
     "thermal_mass",
     "insulation_r",
     "headroom_c",
+    "(sensor_air - setpoint)/deadband",
+    "n_missing_last_30",
+    "max_gap_last_30",
     "horizon_min",
     "physics_temp_c",
     "physics_minutes_to_limit"
@@ -108,17 +117,17 @@
     120
   ],
   "censoring_stats": {
-    "right_censored_share": 0.0472,
-    "left_censored_share": 0.0544
+    "right_censored_share": 0.0481,
+    "left_censored_share": 0.0399
   },
   "headline_metrics": {
-    "overall_m0_physics_mae": 0.311,
-    "overall_m1_ml_mae": 0.339,
-    "overall_m2_hybrid_mae": 0.147,
-    "hybrid_mae_improvement_pct": 52.7,
-    "coverage_90pct_achieved": 0.884,
-    "unsafe_error_rate_90pct": 9.72,
-    "flexibility_penalty_vs_m0_90pct": 6.0,
-    "avg_predicted_safe_min_90pct": 42.2
+    "overall_m0_physics_mae": 0.317,
+    "overall_m1_ml_mae": 0.204,
+    "overall_m2_hybrid_mae": 0.129,
+    "hybrid_mae_improvement_pct": 59.3,
+    "coverage_90pct_achieved": 0.8984,
+    "unsafe_error_rate_90pct": 8.4,
+    "flexibility_penalty_vs_m0_90pct": 5.4,
+    "avg_predicted_safe_min_90pct": 42.3
   }
 }

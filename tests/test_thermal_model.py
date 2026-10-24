@@ -619,3 +619,35 @@ def test_read_sensor_fault_modes() -> None:
     # Drift mode: adds offset
     val_drift = read_sensor(10.0, rng=rng, failure_mode="drift", drift_offset_c=3.0)
     assert val_drift > 12.0
+
+
+# ----------------------------------------------------------------------------
+# Test: Net Primary bounded by thermodynamic infiltration
+# ----------------------------------------------------------------------------
+def test_net_primary_bounded_by_infiltration(calibrated_fac: Facility) -> None:
+    """Verify net_primary <= theoretical infiltration bound + uncertainty."""
+    from simulation.thermal_model import simulate_pair, theoretical_infiltration_bound_kwh
+    setpoint = (calibrated_fac.min_temp_c + calibrated_fac.max_safe_temp_c) / 2.0
+    state = FacilityState(
+        facility_id=calibrated_fac.id,
+        temp_c=setpoint,
+        outside_temp_c=35.0,
+        humidity_pct=60.0,
+        product_load_fraction=0.85,
+        door_openings_per_hour=2.0,
+        compressor_on=True,
+        sensor_ok=True,
+    )
+    act = CurtailmentAction(calibrated_fac.id, start_min=120, duration_min=30)
+    base_df, ev_df, p_sum = simulate_pair(
+        calibrated_fac, state, duration_min=720, curtailments=[act], seed=42, phase_robust=True, n_phase_offsets=12
+    )
+
+    infil_bound = theoretical_infiltration_bound_kwh(calibrated_fac, base_df, ev_df)
+    net_primary = p_sum["net_kwh_saved"]
+    uncertainty = p_sum["accounting_uncertainty_kwh"]
+
+    assert net_primary <= infil_bound + uncertainty + 1e-2, (
+        f"net_primary ({net_primary:.3f}) exceeded infiltration bound ({infil_bound:.3f}) + uncertainty ({uncertainty:.3f})"
+    )
+

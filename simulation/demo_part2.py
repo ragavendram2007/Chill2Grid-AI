@@ -486,7 +486,7 @@ def run_part2_demo() -> None:
     fig_diag.write_html(str(output_dir / "plot_diagnosis_40c_settling.html"))
 
     # -------------------------------------------------------------------------
-    # Ambient Temperature & Phase-Robust Matrix (25, 35, 40 °C, 8 Offsets)
+    # Ambient Temperature & Phase-Robust Matrix (25, 35, 40 °C, 12 Offsets)
     # -------------------------------------------------------------------------
     ambient_matrix_rows = []
     matrix_terminal_rows = []
@@ -517,27 +517,40 @@ def run_part2_demo() -> None:
             t_out = cut_out_mins[0] if cut_out_mins else 60
             t_in = cut_in_mins[0] if cut_in_mins else 90
 
-            # Phase 1: Cut-out (coldest air)
-            act_out = CurtailmentAction(fac.id, start_min=t_out, duration_min=30)
-            df_out = simulate_temperature(fac, st, duration_min=t_out + 90, curtailments=[act_out], seed=42)
-            max_t_out = float(df_out.loc[t_out : t_out + 60, "air_temp_c"].max())
+            # Find max_safe_curtail_min from [10, 20, 30, 45, 60] with buffer 0.2 C
+            limit_threshold = fac.max_safe_temp_c - 0.2
+            passing_durs = []
+            worst_max_temp_30m = -999.0
 
-            # Phase 2: Cut-in (warmest air)
-            act_in = CurtailmentAction(fac.id, start_min=t_in, duration_min=30)
-            df_in = simulate_temperature(fac, st, duration_min=t_in + 90, curtailments=[act_in], seed=42)
-            max_t_in = float(df_in.loc[t_in : t_in + 60, "air_temp_c"].max())
+            for dur in [10, 20, 30, 45, 60]:
+                act_o = CurtailmentAction(fac.id, start_min=t_out, duration_min=dur)
+                df_o = simulate_temperature(fac, st, duration_min=t_out + dur + 60, curtailments=[act_o], seed=42)
+                max_o = float(df_o.loc[t_out : t_out + dur + 30, "air_temp_c"].max())
 
-            worst_max_temp = max(max_t_out, max_t_in)
+                act_i = CurtailmentAction(fac.id, start_min=t_in, duration_min=dur)
+                df_i = simulate_temperature(fac, st, duration_min=t_in + dur + 60, curtailments=[act_i], seed=42)
+                max_i = float(df_i.loc[t_in : t_in + dur + 30, "air_temp_c"].max())
+
+                worst_d = max(max_o, max_i)
+                if dur == 30:
+                    worst_max_temp_30m = worst_d
+
+                if worst_d <= limit_threshold:
+                    passing_durs.append(dur)
+
+            max_safe_curtail_min = max(passing_durs) if passing_durs else 0
 
             # Steady-state duty cycle & saturation check
             duty = steady_state_duty_cycle(fac, st)
             is_cap_limited = duty >= 0.95
-            curtailment_allowed = not is_cap_limited
 
-            # Phase-robust 8-offset twin simulation
+            # Curtailment allowed rule: False if worst-phase max air temp > max_safe_temp_c - 0.2 C
+            curtailment_allowed = not (is_cap_limited or (worst_max_temp_30m > limit_threshold))
+
+            # Phase-robust 12-offset twin simulation
             act_pair = CurtailmentAction(fac.id, start_min=120, duration_min=30)
             _, _, p_sum = simulate_pair(
-                fac, st, duration_min=720, curtailments=[act_pair], seed=42, phase_robust=True, n_phase_offsets=8
+                fac, st, duration_min=720, curtailments=[act_pair], seed=42, phase_robust=True, n_phase_offsets=12
             )
 
             settled = bool(p_sum["settle_time_min"] < 720.0)
@@ -583,6 +596,7 @@ def run_part2_demo() -> None:
                 "duty_cycle": round(duty, 3),
                 "capacity_limited": is_cap_limited,
                 "curtailment_allowed": curtailment_allowed,
+                "max_safe_curtail_min": max_safe_curtail_min,
                 "saved_during_event_kwh": p_sum["energy_saved_during_event_kwh"] if curtailment_allowed else None,
                 "recovery_extra_kwh": p_sum["recovery_extra_kwh"] if curtailment_allowed else None,
                 "net_kwh_saved_primary": p_sum["net_kwh_saved"] if curtailment_allowed else None,
@@ -594,9 +608,9 @@ def run_part2_demo() -> None:
                 "settle_time_min": p_sum["settle_time_min"],
                 "settled": settled,
                 "verdict": verdict,
-                "worst_phase_max_temp_c": round(worst_max_temp, 2),
+                "worst_phase_max_temp_c": round(worst_max_temp_30m, 2),
                 "max_safe_temp_c": fac.max_safe_temp_c,
-                "breached_limit": worst_max_temp > fac.max_safe_temp_c,
+                "breached_limit": worst_max_temp_30m > fac.max_safe_temp_c,
             }
             ambient_matrix_rows.append(rec)
 
@@ -604,16 +618,18 @@ def run_part2_demo() -> None:
                 fac.id,
                 f"{amb:.0f} C",
                 f"{duty * 100:.1f}%",
-                "Yes" if is_cap_limited else "No",
                 "Yes" if curtailment_allowed else "No",
+                f"{max_safe_curtail_min} m",
                 f"{p_sum['energy_saved_during_event_kwh']:.2f} kWh" if curtailment_allowed else "NA",
+                f"{p_sum['recovery_extra_kwh']:.2f} kWh" if curtailment_allowed else "NA",
                 net_str,
+                cross_str,
                 uncert_str,
+                f"{p_sum['peak_rebound_kw']:.1f} kW",
                 shifted_str,
-                f"{p_sum['settle_time_min']:.0f} m",
                 "True" if settled else "False",
                 verdict,
-                f"{worst_max_temp:+.2f} C" + (" (BREACH)" if rec["breached_limit"] else ""),
+                f"{worst_max_temp_30m:+.2f} C" + (" (BREACH)" if rec["breached_limit"] else ""),
             ])
 
     df_matrix = pd.DataFrame(ambient_matrix_rows)
@@ -751,13 +767,15 @@ def run_part2_demo() -> None:
         "Facility",
         "Ambient",
         "Duty Cycle",
-        "Cap Limit",
         "Curtail OK",
-        "Saved Event",
+        "Max Safe",
+        "Saved kWh",
+        "Recovery",
         "Net (Primary)",
+        "Net (Cross)",
         "Uncertainty",
+        "Rebound kW",
         "Shifted %",
-        "Settle Time",
         "Settled",
         "Verdict",
         "Worst Max T",
@@ -771,7 +789,7 @@ def run_part2_demo() -> None:
     mat_header_str = "| " + " | ".join(h.ljust(mat_widths[i]) for i, h in enumerate(mat_headers)) + " |"
 
     print("\n" + "=" * len(mat_separator))
-    print("CHILL2GRID AI - FLEET AMBIENT MATRIX (25°C, 35°C, 40°C DAYS, 8 OFFSETS PHASE-ROBUST, SIMULATED)")
+    print("CHILL2GRID AI - FLEET AMBIENT MATRIX (25°C, 35°C, 40°C DAYS, 12 OFFSETS PHASE-ROBUST, SIMULATED)")
     print("=" * len(mat_separator))
     print(mat_separator)
     print(mat_header_str)
@@ -827,20 +845,33 @@ def run_part2_demo() -> None:
     duty_analytic = steady_state_duty_cycle(prd_fac, prd_st)
     print(f"  Baseline Duty Cycle: Simulated last 6h = {duty_last6h*100:.2f}% | Analytic = {duty_analytic*100:.2f}%")
 
+    # Baseline ON/OFF timeline for minutes 100 to 260
+    timeline_100_260 = []
+    curr_st = prd_base.loc[100, "compressor_on"]
+    seg_start = 100
+    for m in range(101, 261):
+        st_m = prd_base.loc[m, "compressor_on"]
+        if st_m != curr_st:
+            timeline_100_260.append(f"m={seg_start}-{m-1}: {'ON' if curr_st else 'OFF'} ({m - seg_start}m)")
+            curr_st = st_m
+            seg_start = m
+    timeline_100_260.append(f"m={seg_start}-260: {'ON' if curr_st else 'OFF'} ({261 - seg_start}m)")
+    print(f"  Baseline ON/OFF Timeline (m=100..260):\n    " + " -> ".join(timeline_100_260))
+
     cut_ins_prd = [
-        m for m in range(60, 300)
+        m for m in range(1, 720)
         if not prd_base.loc[m - 1, "compressor_on"] and prd_base.loc[m, "compressor_on"]
     ]
-    cycle_len_prd = cut_ins_prd[1] - cut_ins_prd[0] if len(cut_ins_prd) >= 2 else 30
-    base_start_prd = cut_ins_prd[0] if len(cut_ins_prd) >= 2 else 120
-    offsets_prd = [int(round(k * cycle_len_prd / 8.0)) for k in range(8)]
-    print(f"  Cycle Length: {cycle_len_prd} mins | Base Start: {base_start_prd} min")
+    cycle_len_prd = cut_ins_prd[1] - cut_ins_prd[0] if len(cut_ins_prd) >= 2 else 162
+    base_start_prd = cut_ins_prd[0] if len(cut_ins_prd) >= 2 else 199
+    offsets_prd = [int(round(k * cycle_len_prd / 12.0)) for k in range(12)]
+    print(f"  Cycle Length: {cycle_len_prd} mins | Base Start: {base_start_prd} min | 12 Offsets spanning full period:")
     for k, off in enumerate(offsets_prd):
         sm = base_start_prd + off
         comp_on = prd_base.loc[sm, "compressor_on"]
         comp_on_all = prd_base.loc[sm : sm + 29, "compressor_on"].mean() == 1.0
-        print(f"    Offset {k} (m={sm:3d}): Compressor={'ON' if comp_on else 'OFF'} (100% ON throughout 30m event: {comp_on_all})")
-    print("  Why saved_during_event is exactly 155.00 kWh: 310.0 kW compressor * 0.5h = 155.00 kWh (baseline ON throughout all 8 offsets).")
+        print(f"    Offset {k:2d} (m={sm:3d}): Compressor={'ON' if comp_on else 'OFF'} (100% ON throughout 30m event: {comp_on_all})")
+    print("  Why saved_during_event is exactly 155.00 kWh: 310.0 kW compressor * 0.5h = 155.00 kWh (baseline ON throughout all 12 offsets).")
 
     prd_rec = next(r for r in ambient_matrix_rows if r["facility_id"] == "FAC-PRD-04" and r["ambient_c"] == 40.0)
     print(f"  Net Primary: {prd_rec['net_kwh_saved_primary']:+.2f} kWh | Net Cross: {prd_rec['net_kwh_saved_cross_check']:+.2f} kWh")

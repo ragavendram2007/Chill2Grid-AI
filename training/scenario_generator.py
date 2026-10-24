@@ -23,7 +23,7 @@ import pandas as pd
 
 from core.contracts import CurtailmentAction, Facility, FacilityState, load_facilities_from_csv
 from simulation.reality_gap import make_disturbance, make_world_facility
-from simulation.thermal_model import read_sensor, simulate_temperature
+from simulation.thermal_model import THERMOSTAT_DEADBAND_C, read_sensor, simulate_temperature
 
 
 # ============================================================================
@@ -59,6 +59,9 @@ OBSERVABLE_FEATURES: Tuple[str, ...] = (
     "thermal_mass",
     "insulation_r",
     "headroom_c",
+    "(sensor_air - setpoint)/deadband",
+    "n_missing_last_30",
+    "max_gap_last_30",
 )
 
 M1_FEATURES: Tuple[str, ...] = OBSERVABLE_FEATURES + ("horizon_min",)
@@ -80,6 +83,56 @@ FORBIDDEN_FEATURES: set[str] = {
     "reality_gap",
     "world_facility",
 }
+
+
+# ============================================================================
+# NOMINAL FACILITY VALIDATION (BUILDER GUARD)
+# ============================================================================
+
+_NOMINAL_FACILITIES_CACHE: Optional[Dict[str, Facility]] = None
+
+
+def _get_nominal_facilities() -> Dict[str, Facility]:
+    global _NOMINAL_FACILITIES_CACHE
+    if _NOMINAL_FACILITIES_CACHE is None:
+        project_root = Path(__file__).resolve().parent.parent
+        cal_csv = project_root / "data" / "facilities_calibrated.csv"
+        if not cal_csv.is_file():
+            cal_csv = project_root / "data" / "facilities.csv"
+        fac_list = load_facilities_from_csv(cal_csv)
+        _NOMINAL_FACILITIES_CACHE = {f.id: f for f in fac_list}
+    return _NOMINAL_FACILITIES_CACHE
+
+
+def validate_nominal_facility(facility: Facility) -> None:
+    """Validate that facility matches nominal calibrated parameters.
+
+    Raises:
+        ValueError: If facility has perturbed / non-nominal parameters.
+    """
+    nominal_map = _get_nominal_facilities()
+    if facility.id not in nominal_map:
+        raise ValueError(
+            f"Builder rejects perturbed (non-nominal) facility: Unknown facility ID '{facility.id}'."
+        )
+    nom = nominal_map[facility.id]
+    for attr, tol in [
+        ("insulation_r_deg_c_per_kw", 1e-4),
+        ("thermal_mass_kwh_per_c", 1e-4),
+        ("rated_power_kw", 1e-4),
+        ("min_temp_c", 1e-4),
+        ("max_safe_temp_c", 1e-4),
+        ("cop_nominal", 1e-4),
+        ("min_on_min", 1e-4),
+        ("min_off_min", 1e-4),
+    ]:
+        val = getattr(facility, attr)
+        nom_val = getattr(nom, attr)
+        if abs(val - nom_val) > tol:
+            raise ValueError(
+                f"Builder rejects perturbed (non-nominal) facility: {facility.id} {attr} "
+                f"value {val} differs from nominal calibrated value {nom_val}."
+            )
 
 
 # ============================================================================
@@ -122,6 +175,9 @@ class SensorView:
     thermal_mass: float
     insulation_r: float
     headroom_c: float
+    temp_over_deadband: float
+    n_missing_last_30: int
+    max_gap_last_30: int
     phase: str  # "cut_in", "cut_out", "mid_cycle"
     has_dropout_burst: bool = False
     dropout_burst_len: int = 0
@@ -155,6 +211,9 @@ class SensorView:
             "thermal_mass": self.thermal_mass,
             "insulation_r": self.insulation_r,
             "headroom_c": self.headroom_c,
+            "(sensor_air - setpoint)/deadband": self.temp_over_deadband,
+            "n_missing_last_30": self.n_missing_last_30,
+            "max_gap_last_30": self.max_gap_last_30,
         }
 
     def __getattr__(self, item: str):
@@ -298,6 +357,7 @@ def generate_single_scenario(
     Returns:
         List of long-format row dictionaries.
     """
+    validate_nominal_facility(nominal_facility)
     rng = np.random.default_rng(seed)
 
     # 1. Randomize operational & weather boundary conditions
@@ -368,10 +428,10 @@ def generate_single_scenario(
     # 4. Telemetry Stream & Contiguous Dropout Burst Emulation
     true_air_series = true_world_df["air_temp_c"].values
 
-    # 25% chance of a contiguous sensor dropout burst (5 to 15 mins)
-    has_dropout_burst = bool(rng.uniform() < 0.25)
+    # 5% chance of a contiguous sensor dropout burst (1 to 8 mins)
+    has_dropout_burst = bool(rng.uniform() < 0.05)
     dropout_start = int(rng.integers(190, 350)) if has_dropout_burst else -999
-    dropout_len = int(rng.integers(5, 16)) if has_dropout_burst else 0
+    dropout_len = int(rng.integers(1, 9)) if has_dropout_burst else 0
     dropout_range = (
         range(dropout_start, dropout_start + dropout_len)
         if has_dropout_burst
@@ -428,6 +488,22 @@ def generate_single_scenario(
         min_30min = min(past_30_window)
         max_30min = max(past_30_window)
 
+        # Missing telemetry accounting in last 30 minutes [now_min - 30 : now_min + 1]
+        past_raw_window = raw_sensor_telemetry[now_min - 30 : now_min + 1]
+        n_missing_last_30 = sum(1 for v in past_raw_window if v is None)
+        max_gap = 0
+        current_gap = 0
+        for v in past_raw_window:
+            if v is None:
+                current_gap += 1
+                if current_gap > max_gap:
+                    max_gap = current_gap
+            else:
+                current_gap = 0
+        max_gap_last_30 = max_gap
+
+        temp_over_deadband = round((sensor_now - setpoint_c) / THERMOSTAT_DEADBAND_C, 4)
+
         comp_on_val = 1.0 if true_world_df.loc[now_min, "compressor_on"] else 0.0
 
         # Minutes in current compressor state
@@ -478,6 +554,9 @@ def generate_single_scenario(
             thermal_mass=nominal_facility.thermal_mass_kwh_per_c,
             insulation_r=nominal_facility.insulation_r_deg_c_per_kw,
             headroom_c=round(headroom_c, 3),
+            temp_over_deadband=temp_over_deadband,
+            n_missing_last_30=n_missing_last_30,
+            max_gap_last_30=max_gap_last_30,
             phase=phase_label,
             has_dropout_burst=is_active_dropout,
             dropout_burst_len=dropout_len if is_active_dropout else 0,
@@ -574,6 +653,7 @@ def generate_single_scenario(
                 "record_id": rec_idx,
                 "facility_id": nominal_facility.id,
                 "phase": phase_label,
+                "phase_tag": phase_label,
                 "outside_base_c": outside_base_c,
                 "horizon_min": h,
                 "true_temp_c": true_t,
@@ -614,6 +694,9 @@ def generate_full_dataset(
     Returns:
         DataFrame in long format containing all scenario records across horizons.
     """
+    for fac in calibrated_facilities:
+        validate_nominal_facility(fac)
+
     n_fac = len(calibrated_facilities)
     jobs = []
     for sc_id in range(n_scenarios):
@@ -655,8 +738,15 @@ def split_dataset_by_scenario(
         fac_scenarios = df.loc[df["facility_id"] == fac_id, "scenario_id"].unique()
         rng.shuffle(fac_scenarios)
         n_tot = len(fac_scenarios)
-        n_tr = int(round(train_frac * n_tot))
-        n_cal = int(round(calib_frac * n_tot))
+        if n_tot >= 3:
+            n_tr = max(1, int(round(train_frac * n_tot)))
+            n_cal = max(1, int(round(calib_frac * n_tot)))
+            if n_tr + n_cal >= n_tot:
+                n_tr = max(1, n_tot - 2)
+                n_cal = 1
+        else:
+            n_tr = int(round(train_frac * n_tot))
+            n_cal = int(round(calib_frac * n_tot))
 
         train_scenarios.extend(fac_scenarios[:n_tr])
         calib_scenarios.extend(fac_scenarios[n_tr : n_tr + n_cal])
@@ -796,6 +886,12 @@ if __name__ == "__main__":
 
     facilities = load_facilities_from_csv(cal_csv)
     n_sc = 60 if args.quick else 500
+
+    print("=" * 70)
+    print(f"OBSERVABLE FEATURES LIST (Total Count = {len(OBSERVABLE_FEATURES)}):")
+    for idx, feat in enumerate(OBSERVABLE_FEATURES, 1):
+        print(f"  {idx:2d}. {feat}")
+    print("=" * 70)
 
     print(f"Generating {n_sc} scenarios ({'quick mode' if args.quick else 'full mode'}) across {len(facilities)} facilities...")
     df = generate_full_dataset(facilities, n_scenarios=n_sc, n_jobs=-1)

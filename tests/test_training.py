@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import numpy as np
+import pandas as pd
 import pytest
 
 from core.contracts import load_facilities_from_csv
@@ -17,7 +18,9 @@ from training.scenario_generator import (
     SensorView,
     generate_data_quality_report,
     generate_full_dataset,
+    generate_single_scenario,
     split_dataset_by_scenario,
+    validate_nominal_facility,
 )
 
 
@@ -145,6 +148,9 @@ def test_sensor_view_leak_guard() -> None:
         thermal_mass=250.0,
         insulation_r=0.08,
         headroom_c=3.0,
+        temp_over_deadband=2.0,
+        n_missing_last_30=0,
+        max_gap_last_30=0,
         phase="cut_in",
         has_dropout_burst=False,
         dropout_burst_len=0,
@@ -152,6 +158,7 @@ def test_sensor_view_leak_guard() -> None:
     # Observable features dict should match OBSERVABLE_FEATURES
     feat_dict = view.to_feature_dict()
     assert set(feat_dict.keys()) == set(OBSERVABLE_FEATURES)
+    assert len(feat_dict) == 29
 
     # Attempting to access forbidden hidden attributes raises AttributeError
     with pytest.raises(AttributeError, match="LeakGuardBlocked"):
@@ -162,6 +169,56 @@ def test_sensor_view_leak_guard() -> None:
 
     with pytest.raises(AttributeError, match="LeakGuardBlocked"):
         _ = view.disturbance
+
+
+def test_builder_rejects_perturbed_facility(calibrated_facilities) -> None:
+    """Requirement 2: Builder rejects perturbed (non-nominal) facility."""
+    fac = calibrated_facilities[0]
+    rng = np.random.default_rng(42)
+    perturbed_world_fac = make_world_facility(fac, rng)
+
+    with pytest.raises(ValueError, match="Builder rejects perturbed"):
+        validate_nominal_facility(perturbed_world_fac)
+
+    with pytest.raises(ValueError, match="Builder rejects perturbed"):
+        generate_single_scenario(scenario_id=0, nominal_facility=perturbed_world_fac, seed=42)
+
+
+def test_serial_equals_joblib_parallel_dataset(calibrated_facilities) -> None:
+    """Requirement 2: Serial run equals joblib-parallel run (quick config)."""
+    df_serial = generate_full_dataset(
+        calibrated_facilities[:2], n_scenarios=2, records_per_scenario=2, base_seed=42, n_jobs=1
+    )
+    df_parallel = generate_full_dataset(
+        calibrated_facilities[:2], n_scenarios=2, records_per_scenario=2, base_seed=42, n_jobs=2
+    )
+    pd.testing.assert_frame_equal(df_serial, df_parallel)
+
+
+def test_splits_disjoint_and_stratified(calibrated_facilities) -> None:
+    """Requirement 2: Splits disjoint and stratified across facilities and phases."""
+    df = generate_full_dataset(calibrated_facilities, n_scenarios=18, records_per_scenario=6, base_seed=42, n_jobs=1)
+    train_df, calib_df, test_df = split_dataset_by_scenario(df, train_frac=0.60, calib_frac=0.20, seed=42)
+
+    s_train = set(train_df["scenario_id"])
+    s_calib = set(calib_df["scenario_id"])
+    s_test = set(test_df["scenario_id"])
+
+    assert s_train.isdisjoint(s_calib)
+    assert s_train.isdisjoint(s_test)
+    assert s_calib.isdisjoint(s_test)
+
+    # Stratified: all facilities present in train, calib, test
+    all_facs = {f.id for f in calibrated_facilities}
+    assert set(train_df["facility_id"]) == all_facs
+    assert set(calib_df["facility_id"]) == all_facs
+    assert set(test_df["facility_id"]) == all_facs
+
+    # Phase tags present and stratified
+    for split_df in (train_df, calib_df, test_df):
+        assert "phase_tag" in split_df.columns
+        split_phases = set(split_df["phase_tag"].unique())
+        assert {"cut_in", "cut_out", "mid_cycle"}.issubset(split_phases)
 
 
 def test_phase_stratification_and_censoring(calibrated_facilities) -> None:

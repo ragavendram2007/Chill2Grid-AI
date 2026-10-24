@@ -392,6 +392,23 @@ def simulate_temperature(
 # CLOSED-LOOP EVENT ACCOUNTING: BASELINE VS EVENT PAIR
 # ============================================================================
 
+def theoretical_infiltration_bound_kwh(
+    facility: Facility,
+    baseline_df: pd.DataFrame,
+    event_df: pd.DataFrame,
+) -> float:
+    """Compute maximum theoretical electrical energy saved from reduced wall heat ingress.
+
+    Formula: integral of (Delta T_air / (R_wall * COP(T_out))) dt in kWh.
+    """
+    dt_air = np.maximum(0.0, event_df["air_temp_c"] - baseline_df["air_temp_c"])
+    t_out = event_df["outside_temp_c"]
+    cop_series = t_out.map(cop)
+    r_wall = facility.insulation_r_deg_c_per_kw
+    elec_kw = (dt_air / r_wall) / cop_series
+    return float(elec_kw.sum() / 60.0)
+
+
 def simulate_pair(
     facility: Facility,
     state: FacilityState,
@@ -401,14 +418,15 @@ def simulate_pair(
     outside_profile_c: Optional[List[float]] = None,
     restart_delay_min: int = 0,
     phase_robust: bool = True,
-    n_phase_offsets: int = 8,
+    n_phase_offsets: int = 12,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
     """Execute identical twin simulation comparing undisturbed baseline against curtailment event.
 
     Both runs use the exact same random seed so weather and door opening events match perfectly.
     All energy and power metrics are calculated strictly by direct difference between the twin runs.
-    Horizon runs until |stored-heat difference| < 1% of heat injected during event (capped at 12 hours).
-    When phase_robust=True, runs across 8 start offsets spread across one baseline compressor cycle.
+    Horizon runs until |mean(power_event - power_baseline)| < 1% of mean baseline power over one
+    baseline cycle, for 60 consecutive minutes (capped at 12 hours).
+    When phase_robust=True, runs across 12 start offsets spread across one full baseline cycle.
     """
     # Determine event time boundaries
     if curtailments is None:
@@ -455,9 +473,9 @@ def simulate_pair(
     action_dur = max(a.duration_min for a in actions)
     orig_start = min(a.start_min for a in actions)
 
-    # Identify baseline cycle length and start offsets
+    # Identify baseline cycle length and start offsets from full plain run
     cut_ins = []
-    for m in range(60, min(300, horizon - 1)):
+    for m in range(1, horizon):
         if not baseline_df.loc[m - 1, "compressor_on"] and baseline_df.loc[m, "compressor_on"]:
             cut_ins.append(m)
 
@@ -489,6 +507,9 @@ def simulate_pair(
 
     first_event_df: Optional[pd.DataFrame] = None
 
+    p_base_mean = float(baseline_df["power_kw"].mean())
+    p_thresh = 0.01 * p_base_mean
+
     for off in offsets:
         ev_start = base_start + off
         ev_end = ev_start + action_dur
@@ -513,17 +534,20 @@ def simulate_pair(
         dH_prod = c_prod * (e_df["product_temp_c"] - baseline_df["product_temp_c"])
         dH_tot = dH_air + dH_prod
 
-        # Heat injected during event
-        dH_inj = abs(float(dH_tot.iloc[ev_end - 1]))
-        thresh = 0.02 * dH_inj
-
-        # Find settle time: moving average of |dH| over one baseline cycle < 2% of injected heat
-        ma_dH = dH_tot.abs().rolling(window=cycle_len, min_periods=1).mean()
+        # Settle condition: |mean(power_event - power_baseline)| < 1% of mean baseline power
+        # over one baseline cycle, for 60 consecutive minutes
+        diff_p = e_df["power_kw"] - baseline_df["power_kw"]
+        ma_diff_p = diff_p.rolling(window=cycle_len, min_periods=cycle_len).mean().abs()
         settle_m = horizon
-        for m in range(ev_end, horizon):
-            if ma_dH.iloc[m] < thresh:
-                settle_m = m
-                break
+        consec_cnt = 0
+        for m in range(ev_end + cycle_len, horizon):
+            if ma_diff_p.iloc[m] < p_thresh:
+                consec_cnt += 1
+                if consec_cnt >= 60:
+                    settle_m = m
+                    break
+            else:
+                consec_cnt = 0
         settle_list.append(float(settle_m))
 
         # 1. Saved during event

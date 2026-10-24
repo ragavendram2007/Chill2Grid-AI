@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 from core.contracts import CurtailmentAction, Facility, FacilityState
-from simulation.thermal_model import simulate_temperature
+from simulation.thermal_model import THERMOSTAT_DEADBAND_C, simulate_temperature
 from training.scenario_generator import FORECAST_HORIZONS, M1_FEATURES, M2_FEATURES, OBSERVABLE_FEATURES
 
 
@@ -86,9 +86,24 @@ def load_predictor(artifacts_dir: Optional[str | Path] = None) -> Dict[str, obje
 
     # Convert string keys to floats and ints
     cleaned_offsets: Dict[float, Dict[int, float]] = {}
-    for lvl_str, h_dict in conformal_offsets.items():
-        lvl = float(lvl_str)
-        cleaned_offsets[lvl] = {int(h): float(val) for h, val in h_dict.items()}
+    phase_offsets: Dict[str, Dict[float, Dict[int, float]]] = {}
+
+    if "pooled" in conformal_offsets and "phase" in conformal_offsets:
+        for lvl_str, h_dict in conformal_offsets["pooled"].items():
+            lvl = float(lvl_str)
+            cleaned_offsets[lvl] = {int(h): float(val) for h, val in h_dict.items()}
+        for ph_str, lvl_dict in conformal_offsets["phase"].items():
+            phase_offsets[ph_str] = {}
+            for lvl_str, h_dict in lvl_dict.items():
+                lvl = float(lvl_str)
+                phase_offsets[ph_str][lvl] = {int(h): float(val) for h, val in h_dict.items()}
+    else:
+        for lvl_str, h_dict in conformal_offsets.items():
+            try:
+                lvl = float(lvl_str)
+                cleaned_offsets[lvl] = {int(h): float(val) for h, val in h_dict.items()}
+            except (ValueError, TypeError):
+                continue
 
     m1_mod = joblib.load(m1_path)
     m2_mod = joblib.load(m2_path)
@@ -100,6 +115,7 @@ def load_predictor(artifacts_dir: Optional[str | Path] = None) -> Dict[str, obje
         "m2_model": m2_mod,
         "m3_models": joblib.load(m3_path),
         "conformal_offsets": cleaned_offsets,
+        "phase_conformal_offsets": phase_offsets,
         "metadata": metadata,
     }
     return _PREDICTOR_CACHE
@@ -166,6 +182,22 @@ def build_features_from_telemetry(
     setpoint_c = (facility.min_temp_c + facility.max_safe_temp_c) / 2.0
     headroom_c = facility.max_safe_temp_c - lag_0
 
+    # Missing telemetry accounting in last 30 readings
+    past_raw_30 = sensor_history_c[-31:]
+    n_missing_last_30 = sum(1 for v in past_raw_30 if v is None)
+    max_gap_30 = 0
+    cur_gap = 0
+    for v in past_raw_30:
+        if v is None:
+            cur_gap += 1
+            if cur_gap > max_gap_30:
+                max_gap_30 = cur_gap
+        else:
+            cur_gap = 0
+    max_gap_last_30 = max_gap_30
+
+    temp_over_deadband = (lag_0 - setpoint_c) / THERMOSTAT_DEADBAND_C
+
     feat_dict = {
         "lag_0": lag_0,
         "lag_1": lag_1,
@@ -193,6 +225,9 @@ def build_features_from_telemetry(
         "thermal_mass": float(facility.thermal_mass_kwh_per_c),
         "insulation_r": float(facility.insulation_r_deg_c_per_kw),
         "headroom_c": headroom_c,
+        "(sensor_air - setpoint)/deadband": float(temp_over_deadband),
+        "n_missing_last_30": int(n_missing_last_30),
+        "max_gap_last_30": int(max_gap_last_30),
     }
     return feat_dict, None
 
@@ -302,6 +337,14 @@ def predict_trajectory(
     # 4. Predict Conservative Upper Bounds (M3)
     m3_models: Dict[float, HistGradientBoostingRegressor] = cache["m3_models"]
     conformal_offsets: Dict[float, Dict[int, float]] = cache["conformal_offsets"]
+    phase_conformal_offsets: Dict[str, Dict[float, Dict[int, float]]] = cache.get("phase_conformal_offsets", {})
+
+    # Detect current cycle phase tag for phase-conditional calibration
+    current_phase = "mid_cycle"
+    if state.compressor_on and minutes_in_compressor_state <= 2:
+        current_phase = "cut_in"
+    elif not state.compressor_on and minutes_in_compressor_state <= 2:
+        current_phase = "cut_out"
 
     upper_dict: Dict[float, List[float]] = {}
     for level in CONFIDENCE_LEVELS:
@@ -309,7 +352,15 @@ def predict_trajectory(
         raw_upper = q_mod.predict(X_m2)
         calib_upper = []
         for i, h in enumerate(target_horizons):
-            c_offset = conformal_offsets.get(level, {}).get(h, 0.0)
+            if (
+                current_phase in phase_conformal_offsets
+                and level in phase_conformal_offsets[current_phase]
+                and h in phase_conformal_offsets[current_phase][level]
+            ):
+                c_offset = phase_conformal_offsets[current_phase][level][h]
+            else:
+                c_offset = conformal_offsets.get(level, {}).get(h, 0.0)
+
             up_val = float(physics_trajectory[i] + raw_upper[i] + c_offset)
             # Enforce upper >= hybrid mean
             calib_upper.append(max(up_val, hybrid_mean[i]))
