@@ -1,0 +1,618 @@
+{
+  "rules_version": "1.0.0",
+  "model_version": "1.1.0",
+  "git_commit": "27d2c20",
+  "created_at_utc": "2026-10-24T18:55:34.968449+00:00",
+  "total_calibration_scenarios": 900,
+  "total_decision_records": 18000,
+  "calibration_duration_sec": 137.9,
+  "key1_bootstrap_shrinks": {
+    "CRITICAL": {
+      "pooled": -0.42,
+      "cut_in": -0.76,
+      "mid_cycle": -0.43,
+      "cut_out": 0.0
+    },
+    "HIGH": {
+      "pooled": 0.0,
+      "cut_in": 0.0,
+      "mid_cycle": 0.0,
+      "cut_out": 0.0
+    },
+    "STANDARD": {
+      "pooled": 0.0,
+      "cut_in": 0.0,
+      "mid_cycle": 0.0,
+      "cut_out": 0.0
+    }
+  },
+  "key1_audit_stats": {
+    "CRITICAL": {
+      "pooled": {
+        "record_count": 6000,
+        "scenario_count": 300,
+        "plain_quantile": -0.42,
+        "calibrated_shrink": -0.42,
+        "bootstrap_q5": -0.663,
+        "bootstrap_q95": -0.208,
+        "bootstrap_spread": 0.455,
+        "is_fallback": false
+      },
+      "cut_in": {
+        "record_count": 1769,
+        "scenario_count": 286,
+        "plain_quantile": -0.76,
+        "calibrated_shrink": -0.76,
+        "bootstrap_q5": -1.384,
+        "bootstrap_q95": -0.42,
+        "bootstrap_spread": 0.964,
+        "is_fallback": false
+      },
+      "mid_cycle": {
+        "record_count": 2677,
+        "scenario_count": 300,
+        "plain_quantile": -0.43,
+        "calibrated_shrink": -0.43,
+        "bootstrap_q5": -0.711,
+        "bootstrap_q95": -0.166,
+        "bootstrap_spread": 0.545,
+        "is_fallback": false
+      },
+      "cut_out": {
+        "record_count": 1554,
+        "scenario_count": 278,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": 0.0,
+        "bootstrap_q95": 0.0,
+        "bootstrap_spread": 0.0,
+        "is_fallback": false
+      }
+    },
+    "HIGH": {
+      "pooled": {
+        "record_count": 7200,
+        "scenario_count": 360,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": 0.0,
+        "bootstrap_q95": 0.0,
+        "bootstrap_spread": 0.0,
+        "is_fallback": false
+      },
+      "cut_in": {
+        "record_count": 1881,
+        "scenario_count": 321,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": 0.0,
+        "bootstrap_q95": 0.0,
+        "bootstrap_spread": 0.0,
+        "is_fallback": false
+      },
+      "mid_cycle": {
+        "record_count": 3533,
+        "scenario_count": 360,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": -0.01,
+        "bootstrap_q95": 0.0,
+        "bootstrap_spread": 0.01,
+        "is_fallback": false
+      },
+      "cut_out": {
+        "record_count": 1786,
+        "scenario_count": 309,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": -0.12,
+        "bootstrap_q95": 0.0,
+        "bootstrap_spread": 0.12,
+        "is_fallback": false
+      }
+    },
+    "STANDARD": {
+      "pooled": {
+        "record_count": 4800,
+        "scenario_count": 240,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": 0.0,
+        "bootstrap_q95": 0.755,
+        "bootstrap_spread": 0.755,
+        "is_fallback": false
+      },
+      "cut_in": {
+        "record_count": 1316,
+        "scenario_count": 224,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": 0.0,
+        "bootstrap_q95": 1.207,
+        "bootstrap_spread": 1.207,
+        "is_fallback": false
+      },
+      "mid_cycle": {
+        "record_count": 2204,
+        "scenario_count": 240,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": 0.0,
+        "bootstrap_q95": 0.791,
+        "bootstrap_spread": 0.791,
+        "is_fallback": false
+      },
+      "cut_out": {
+        "record_count": 1280,
+        "scenario_count": 219,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": 0.0,
+        "bootstrap_q95": 0.342,
+        "bootstrap_spread": 0.342,
+        "is_fallback": false
+      }
+    }
+  },
+  "key2_calibrated_lambdas": {
+    "CRITICAL": 0.8,
+    "HIGH": 0.4,
+    "STANDARD": 0.35
+  },
+  "key2_pareto_table": [
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.0,
+      "coverage": 0.5567,
+      "soft_violation_rate": 0.4433,
+      "hard_breach_rate": 0.02,
+      "mean_safe_min": 20.51,
+      "flexibility_retained": 1.0319
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.1,
+      "coverage": 0.6433,
+      "soft_violation_rate": 0.3567,
+      "hard_breach_rate": 0.0033,
+      "mean_safe_min": 18.7,
+      "flexibility_retained": 0.9411
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.2,
+      "coverage": 0.7783,
+      "soft_violation_rate": 0.2217,
+      "hard_breach_rate": 0.0017,
+      "mean_safe_min": 17.01,
+      "flexibility_retained": 0.857
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.3,
+      "coverage": 0.885,
+      "soft_violation_rate": 0.115,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 15.43,
+      "flexibility_retained": 0.7784
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.35,
+      "coverage": 0.9233,
+      "soft_violation_rate": 0.0767,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 14.67,
+      "flexibility_retained": 0.7406
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.4,
+      "coverage": 0.9583,
+      "soft_violation_rate": 0.0417,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 13.92,
+      "flexibility_retained": 0.7041
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.5,
+      "coverage": 0.9817,
+      "soft_violation_rate": 0.0183,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 12.5,
+      "flexibility_retained": 0.6325
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.6,
+      "coverage": 0.985,
+      "soft_violation_rate": 0.015,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 11.18,
+      "flexibility_retained": 0.5667
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.7,
+      "coverage": 0.9883,
+      "soft_violation_rate": 0.0117,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 9.9,
+      "flexibility_retained": 0.5037
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.8,
+      "coverage": 0.9917,
+      "soft_violation_rate": 0.0083,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 8.7,
+      "flexibility_retained": 0.4428
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.9,
+      "coverage": 0.995,
+      "soft_violation_rate": 0.005,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 7.58,
+      "flexibility_retained": 0.3873
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 1.0,
+      "coverage": 0.9983,
+      "soft_violation_rate": 0.0017,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 6.52,
+      "flexibility_retained": 0.3339
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.0,
+      "coverage": 0.535,
+      "soft_violation_rate": 0.465,
+      "hard_breach_rate": 0.17,
+      "mean_safe_min": 30.58,
+      "flexibility_retained": 1.0132
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.1,
+      "coverage": 0.6167,
+      "soft_violation_rate": 0.3833,
+      "hard_breach_rate": 0.08,
+      "mean_safe_min": 27.67,
+      "flexibility_retained": 0.9139
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.2,
+      "coverage": 0.7317,
+      "soft_violation_rate": 0.2683,
+      "hard_breach_rate": 0.0233,
+      "mean_safe_min": 24.87,
+      "flexibility_retained": 0.8181
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.3,
+      "coverage": 0.8683,
+      "soft_violation_rate": 0.1317,
+      "hard_breach_rate": 0.0067,
+      "mean_safe_min": 22.23,
+      "flexibility_retained": 0.729
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.35,
+      "coverage": 0.9217,
+      "soft_violation_rate": 0.0783,
+      "hard_breach_rate": 0.005,
+      "mean_safe_min": 20.99,
+      "flexibility_retained": 0.6871
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.4,
+      "coverage": 0.9567,
+      "soft_violation_rate": 0.0433,
+      "hard_breach_rate": 0.0033,
+      "mean_safe_min": 19.77,
+      "flexibility_retained": 0.646
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.5,
+      "coverage": 0.985,
+      "soft_violation_rate": 0.015,
+      "hard_breach_rate": 0.0017,
+      "mean_safe_min": 17.46,
+      "flexibility_retained": 0.5683
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.6,
+      "coverage": 0.9917,
+      "soft_violation_rate": 0.0083,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 15.3,
+      "flexibility_retained": 0.4962
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.7,
+      "coverage": 0.995,
+      "soft_violation_rate": 0.005,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 13.31,
+      "flexibility_retained": 0.4299
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.8,
+      "coverage": 0.995,
+      "soft_violation_rate": 0.005,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 11.5,
+      "flexibility_retained": 0.3698
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.9,
+      "coverage": 0.995,
+      "soft_violation_rate": 0.005,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 9.91,
+      "flexibility_retained": 0.3191
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 1.0,
+      "coverage": 0.9967,
+      "soft_violation_rate": 0.0033,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 8.5,
+      "flexibility_retained": 0.2744
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.0,
+      "coverage": 0.5067,
+      "soft_violation_rate": 0.4933,
+      "hard_breach_rate": 0.2783,
+      "mean_safe_min": 65.14,
+      "flexibility_retained": 1.0074
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.1,
+      "coverage": 0.605,
+      "soft_violation_rate": 0.395,
+      "hard_breach_rate": 0.17,
+      "mean_safe_min": 60.86,
+      "flexibility_retained": 0.9343
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.2,
+      "coverage": 0.7417,
+      "soft_violation_rate": 0.2583,
+      "hard_breach_rate": 0.0783,
+      "mean_safe_min": 56.55,
+      "flexibility_retained": 0.8634
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.3,
+      "coverage": 0.865,
+      "soft_violation_rate": 0.135,
+      "hard_breach_rate": 0.0217,
+      "mean_safe_min": 52.17,
+      "flexibility_retained": 0.7925
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.35,
+      "coverage": 0.925,
+      "soft_violation_rate": 0.075,
+      "hard_breach_rate": 0.01,
+      "mean_safe_min": 50.05,
+      "flexibility_retained": 0.7586
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.4,
+      "coverage": 0.9533,
+      "soft_violation_rate": 0.0467,
+      "hard_breach_rate": 0.0033,
+      "mean_safe_min": 47.94,
+      "flexibility_retained": 0.7251
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.5,
+      "coverage": 0.9833,
+      "soft_violation_rate": 0.0167,
+      "hard_breach_rate": 0.0017,
+      "mean_safe_min": 43.89,
+      "flexibility_retained": 0.6615
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.6,
+      "coverage": 0.9967,
+      "soft_violation_rate": 0.0033,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 40.05,
+      "flexibility_retained": 0.6012
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.7,
+      "coverage": 0.9983,
+      "soft_violation_rate": 0.0017,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 36.43,
+      "flexibility_retained": 0.5447
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.8,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 32.94,
+      "flexibility_retained": 0.4903
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.9,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 29.63,
+      "flexibility_retained": 0.44
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 1.0,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 26.52,
+      "flexibility_retained": 0.3934
+    }
+  ],
+  "ood_thresholds": {
+    "disagreement_30m": 0.813,
+    "disagreement_60m": 0.811
+  },
+  "sensor_integrity": {
+    "residual_sigma_c": 0.3058,
+    "cusum_slack_k": 0.1529,
+    "cusum_threshold_h": 1.2232,
+    "max_consecutive_missing": 5,
+    "max_jump_deg_c": 2.0,
+    "stuck_window_mins": 15
+  },
+  "feature_bounds": {
+    "lag_0": [
+      -25.519,
+      14.566
+    ],
+    "lag_1": [
+      -25.736,
+      14.566
+    ],
+    "lag_2": [
+      -25.491,
+      14.566
+    ],
+    "lag_5": [
+      -25.581,
+      13.575
+    ],
+    "lag_10": [
+      -25.437,
+      13.379
+    ],
+    "lag_15": [
+      -25.736,
+      13.481
+    ],
+    "lag_30": [
+      -25.624,
+      13.645
+    ],
+    "lag_60": [
+      -25.739,
+      11.73
+    ],
+    "slope_5min": [
+      -0.3908,
+      0.3678
+    ],
+    "slope_15min": [
+      -0.1809,
+      0.1811
+    ],
+    "min_30min": [
+      -25.748,
+      13.012
+    ],
+    "max_30min": [
+      -24.348,
+      14.566
+    ],
+    "compressor_on": [
+      0.0,
+      1.0
+    ],
+    "minutes_in_compressor_state": [
+      1.0,
+      360.0
+    ],
+    "minutes_since_curtailment": [
+      0.0,
+      600.0
+    ],
+    "outside_temp_c": [
+      18.9,
+      48.86
+    ],
+    "humidity_pct": [
+      30.0,
+      90.0
+    ],
+    "product_load_fraction": [
+      0.3,
+      1.0
+    ],
+    "door_rate": [
+      0.0,
+      12.0
+    ],
+    "rated_power_kw": [
+      45.0,
+      310.0
+    ],
+    "setpoint_c": [
+      -24.0,
+      4.25
+    ],
+    "max_safe_temp_c": [
+      -22.0,
+      6.5
+    ],
+    "min_temp_c": [
+      -26.0,
+      2.0
+    ],
+    "thermal_mass": [
+      16.57,
+      405.92
+    ],
+    "insulation_r": [
+      0.0861,
+      0.6739
+    ],
+    "headroom_c": [
+      -8.066,
+      4.235
+    ],
+    "(sensor_air - setpoint)/deadband": [
+      -3.9708,
+      20.633
+    ],
+    "n_missing_last_30": [
+      0.0,
+      8.0
+    ],
+    "max_gap_last_30": [
+      0.0,
+      8.0
+    ]
+  }
+}

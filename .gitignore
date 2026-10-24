@@ -18,5 +18,9 @@ scratch/
 # Runtime output directory
 outputs/
 
+# Large generated datasets
+data/safety/calib_extra.csv
+data/safety/redteam.csv
+
 # Serialized ML model weights
 *.joblib

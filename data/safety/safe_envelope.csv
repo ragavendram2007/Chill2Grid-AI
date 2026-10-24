@@ -1,0 +1,235 @@
+facility_id,product_type,outside_temp_c,product_load_fraction,max_safe_curtail_min,risk_tier
+FAC-FZN-01,Frozen Food,20.0,0.3,9,STANDARD
+FAC-FZN-01,Frozen Food,20.0,0.6,13,STANDARD
+FAC-FZN-01,Frozen Food,20.0,1.0,17,STANDARD
+FAC-FZN-01,Frozen Food,22.0,0.3,8,STANDARD
+FAC-FZN-01,Frozen Food,22.0,0.6,11,STANDARD
+FAC-FZN-01,Frozen Food,22.0,1.0,14,STANDARD
+FAC-FZN-01,Frozen Food,24.0,0.3,7,STANDARD
+FAC-FZN-01,Frozen Food,24.0,0.6,10,STANDARD
+FAC-FZN-01,Frozen Food,24.0,1.0,12,STANDARD
+FAC-FZN-01,Frozen Food,26.0,0.3,6,STANDARD
+FAC-FZN-01,Frozen Food,26.0,0.6,8,STANDARD
+FAC-FZN-01,Frozen Food,26.0,1.0,10,STANDARD
+FAC-FZN-01,Frozen Food,28.0,0.3,6,STANDARD
+FAC-FZN-01,Frozen Food,28.0,0.6,7,STANDARD
+FAC-FZN-01,Frozen Food,28.0,1.0,8,STANDARD
+FAC-FZN-01,Frozen Food,30.0,0.3,5,STANDARD
+FAC-FZN-01,Frozen Food,30.0,0.6,6,STANDARD
+FAC-FZN-01,Frozen Food,30.0,1.0,7,STANDARD
+FAC-FZN-01,Frozen Food,32.0,0.3,4,STANDARD
+FAC-FZN-01,Frozen Food,32.0,0.6,5,STANDARD
+FAC-FZN-01,Frozen Food,32.0,1.0,6,STANDARD
+FAC-FZN-01,Frozen Food,34.0,0.3,4,STANDARD
+FAC-FZN-01,Frozen Food,34.0,0.6,5,STANDARD
+FAC-FZN-01,Frozen Food,34.0,1.0,5,STANDARD
+FAC-FZN-01,Frozen Food,36.0,0.3,3,STANDARD
+FAC-FZN-01,Frozen Food,36.0,0.6,4,STANDARD
+FAC-FZN-01,Frozen Food,36.0,1.0,4,STANDARD
+FAC-FZN-01,Frozen Food,38.0,0.3,3,STANDARD
+FAC-FZN-01,Frozen Food,38.0,0.6,3,STANDARD
+FAC-FZN-01,Frozen Food,38.0,1.0,4,STANDARD
+FAC-FZN-01,Frozen Food,40.0,0.3,3,STANDARD
+FAC-FZN-01,Frozen Food,40.0,0.6,3,STANDARD
+FAC-FZN-01,Frozen Food,40.0,1.0,3,STANDARD
+FAC-FZN-01,Frozen Food,42.0,0.3,2,STANDARD
+FAC-FZN-01,Frozen Food,42.0,0.6,3,STANDARD
+FAC-FZN-01,Frozen Food,42.0,1.0,3,STANDARD
+FAC-FZN-01,Frozen Food,44.0,0.3,2,STANDARD
+FAC-FZN-01,Frozen Food,44.0,0.6,2,STANDARD
+FAC-FZN-01,Frozen Food,44.0,1.0,2,STANDARD
+FAC-ICE-02,Ice Cream,20.0,0.3,2,HIGH
+FAC-ICE-02,Ice Cream,20.0,0.6,3,HIGH
+FAC-ICE-02,Ice Cream,20.0,1.0,4,HIGH
+FAC-ICE-02,Ice Cream,22.0,0.3,2,HIGH
+FAC-ICE-02,Ice Cream,22.0,0.6,2,HIGH
+FAC-ICE-02,Ice Cream,22.0,1.0,3,HIGH
+FAC-ICE-02,Ice Cream,24.0,0.3,1,HIGH
+FAC-ICE-02,Ice Cream,24.0,0.6,2,HIGH
+FAC-ICE-02,Ice Cream,24.0,1.0,2,HIGH
+FAC-ICE-02,Ice Cream,26.0,0.3,1,HIGH
+FAC-ICE-02,Ice Cream,26.0,0.6,1,HIGH
+FAC-ICE-02,Ice Cream,26.0,1.0,2,HIGH
+FAC-ICE-02,Ice Cream,28.0,0.3,1,HIGH
+FAC-ICE-02,Ice Cream,28.0,0.6,1,HIGH
+FAC-ICE-02,Ice Cream,28.0,1.0,1,HIGH
+FAC-ICE-02,Ice Cream,30.0,0.3,0,HIGH
+FAC-ICE-02,Ice Cream,30.0,0.6,1,HIGH
+FAC-ICE-02,Ice Cream,30.0,1.0,1,HIGH
+FAC-ICE-02,Ice Cream,32.0,0.3,0,HIGH
+FAC-ICE-02,Ice Cream,32.0,0.6,0,HIGH
+FAC-ICE-02,Ice Cream,32.0,1.0,0,HIGH
+FAC-ICE-02,Ice Cream,34.0,0.3,0,HIGH
+FAC-ICE-02,Ice Cream,34.0,0.6,0,HIGH
+FAC-ICE-02,Ice Cream,34.0,1.0,0,HIGH
+FAC-ICE-02,Ice Cream,36.0,0.3,0,HIGH
+FAC-ICE-02,Ice Cream,36.0,0.6,0,HIGH
+FAC-ICE-02,Ice Cream,36.0,1.0,0,HIGH
+FAC-ICE-02,Ice Cream,38.0,0.3,0,HIGH
+FAC-ICE-02,Ice Cream,38.0,0.6,0,HIGH
+FAC-ICE-02,Ice Cream,38.0,1.0,0,HIGH
+FAC-ICE-02,Ice Cream,40.0,0.3,0,HIGH
+FAC-ICE-02,Ice Cream,40.0,0.6,0,HIGH
+FAC-ICE-02,Ice Cream,40.0,1.0,0,HIGH
+FAC-ICE-02,Ice Cream,42.0,0.3,0,HIGH
+FAC-ICE-02,Ice Cream,42.0,0.6,0,HIGH
+FAC-ICE-02,Ice Cream,42.0,1.0,0,HIGH
+FAC-ICE-02,Ice Cream,44.0,0.3,0,HIGH
+FAC-ICE-02,Ice Cream,44.0,0.6,0,HIGH
+FAC-ICE-02,Ice Cream,44.0,1.0,0,HIGH
+FAC-VAX-03,Vaccines & Pharmaceuticals,20.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,20.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,20.0,1.0,5,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,22.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,22.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,22.0,1.0,2,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,24.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,24.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,24.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,26.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,26.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,26.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,28.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,28.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,28.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,30.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,30.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,30.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,32.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,32.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,32.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,34.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,34.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,34.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,36.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,36.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,36.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,38.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,38.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,38.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,40.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,40.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,40.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,42.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,42.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,42.0,1.0,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,44.0,0.3,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,44.0,0.6,0,CRITICAL
+FAC-VAX-03,Vaccines & Pharmaceuticals,44.0,1.0,0,CRITICAL
+FAC-PRD-04,Fresh Produce,20.0,0.3,31,STANDARD
+FAC-PRD-04,Fresh Produce,20.0,0.6,56,STANDARD
+FAC-PRD-04,Fresh Produce,20.0,1.0,60,STANDARD
+FAC-PRD-04,Fresh Produce,22.0,0.3,27,STANDARD
+FAC-PRD-04,Fresh Produce,22.0,0.6,48,STANDARD
+FAC-PRD-04,Fresh Produce,22.0,1.0,60,STANDARD
+FAC-PRD-04,Fresh Produce,24.0,0.3,23,STANDARD
+FAC-PRD-04,Fresh Produce,24.0,0.6,42,STANDARD
+FAC-PRD-04,Fresh Produce,24.0,1.0,60,STANDARD
+FAC-PRD-04,Fresh Produce,26.0,0.3,20,STANDARD
+FAC-PRD-04,Fresh Produce,26.0,0.6,36,STANDARD
+FAC-PRD-04,Fresh Produce,26.0,1.0,57,STANDARD
+FAC-PRD-04,Fresh Produce,28.0,0.3,18,STANDARD
+FAC-PRD-04,Fresh Produce,28.0,0.6,32,STANDARD
+FAC-PRD-04,Fresh Produce,28.0,1.0,50,STANDARD
+FAC-PRD-04,Fresh Produce,30.0,0.3,16,STANDARD
+FAC-PRD-04,Fresh Produce,30.0,0.6,28,STANDARD
+FAC-PRD-04,Fresh Produce,30.0,1.0,44,STANDARD
+FAC-PRD-04,Fresh Produce,32.0,0.3,14,STANDARD
+FAC-PRD-04,Fresh Produce,32.0,0.6,25,STANDARD
+FAC-PRD-04,Fresh Produce,32.0,1.0,39,STANDARD
+FAC-PRD-04,Fresh Produce,34.0,0.3,12,STANDARD
+FAC-PRD-04,Fresh Produce,34.0,0.6,22,STANDARD
+FAC-PRD-04,Fresh Produce,34.0,1.0,34,STANDARD
+FAC-PRD-04,Fresh Produce,36.0,0.3,11,STANDARD
+FAC-PRD-04,Fresh Produce,36.0,0.6,19,STANDARD
+FAC-PRD-04,Fresh Produce,36.0,1.0,30,STANDARD
+FAC-PRD-04,Fresh Produce,38.0,0.3,10,STANDARD
+FAC-PRD-04,Fresh Produce,38.0,0.6,17,STANDARD
+FAC-PRD-04,Fresh Produce,38.0,1.0,27,STANDARD
+FAC-PRD-04,Fresh Produce,40.0,0.3,8,STANDARD
+FAC-PRD-04,Fresh Produce,40.0,0.6,15,STANDARD
+FAC-PRD-04,Fresh Produce,40.0,1.0,24,STANDARD
+FAC-PRD-04,Fresh Produce,42.0,0.3,0,STANDARD
+FAC-PRD-04,Fresh Produce,42.0,0.6,0,STANDARD
+FAC-PRD-04,Fresh Produce,42.0,1.0,0,STANDARD
+FAC-PRD-04,Fresh Produce,44.0,0.3,0,STANDARD
+FAC-PRD-04,Fresh Produce,44.0,0.6,0,STANDARD
+FAC-PRD-04,Fresh Produce,44.0,1.0,0,STANDARD
+FAC-SEA-05,Seafood & Marine Export,20.0,0.3,9,HIGH
+FAC-SEA-05,Seafood & Marine Export,20.0,0.6,16,HIGH
+FAC-SEA-05,Seafood & Marine Export,20.0,1.0,25,HIGH
+FAC-SEA-05,Seafood & Marine Export,22.0,0.3,8,HIGH
+FAC-SEA-05,Seafood & Marine Export,22.0,0.6,14,HIGH
+FAC-SEA-05,Seafood & Marine Export,22.0,1.0,22,HIGH
+FAC-SEA-05,Seafood & Marine Export,24.0,0.3,7,HIGH
+FAC-SEA-05,Seafood & Marine Export,24.0,0.6,13,HIGH
+FAC-SEA-05,Seafood & Marine Export,24.0,1.0,19,HIGH
+FAC-SEA-05,Seafood & Marine Export,26.0,0.3,7,HIGH
+FAC-SEA-05,Seafood & Marine Export,26.0,0.6,11,HIGH
+FAC-SEA-05,Seafood & Marine Export,26.0,1.0,17,HIGH
+FAC-SEA-05,Seafood & Marine Export,28.0,0.3,6,HIGH
+FAC-SEA-05,Seafood & Marine Export,28.0,0.6,10,HIGH
+FAC-SEA-05,Seafood & Marine Export,28.0,1.0,15,HIGH
+FAC-SEA-05,Seafood & Marine Export,30.0,0.3,5,HIGH
+FAC-SEA-05,Seafood & Marine Export,30.0,0.6,9,HIGH
+FAC-SEA-05,Seafood & Marine Export,30.0,1.0,13,HIGH
+FAC-SEA-05,Seafood & Marine Export,32.0,0.3,5,HIGH
+FAC-SEA-05,Seafood & Marine Export,32.0,0.6,8,HIGH
+FAC-SEA-05,Seafood & Marine Export,32.0,1.0,11,HIGH
+FAC-SEA-05,Seafood & Marine Export,34.0,0.3,4,HIGH
+FAC-SEA-05,Seafood & Marine Export,34.0,0.6,7,HIGH
+FAC-SEA-05,Seafood & Marine Export,34.0,1.0,10,HIGH
+FAC-SEA-05,Seafood & Marine Export,36.0,0.3,4,HIGH
+FAC-SEA-05,Seafood & Marine Export,36.0,0.6,6,HIGH
+FAC-SEA-05,Seafood & Marine Export,36.0,1.0,8,HIGH
+FAC-SEA-05,Seafood & Marine Export,38.0,0.3,3,HIGH
+FAC-SEA-05,Seafood & Marine Export,38.0,0.6,5,HIGH
+FAC-SEA-05,Seafood & Marine Export,38.0,1.0,7,HIGH
+FAC-SEA-05,Seafood & Marine Export,40.0,0.3,3,HIGH
+FAC-SEA-05,Seafood & Marine Export,40.0,0.6,4,HIGH
+FAC-SEA-05,Seafood & Marine Export,40.0,1.0,6,HIGH
+FAC-SEA-05,Seafood & Marine Export,42.0,0.3,0,HIGH
+FAC-SEA-05,Seafood & Marine Export,42.0,0.6,0,HIGH
+FAC-SEA-05,Seafood & Marine Export,42.0,1.0,0,HIGH
+FAC-SEA-05,Seafood & Marine Export,44.0,0.3,0,HIGH
+FAC-SEA-05,Seafood & Marine Export,44.0,0.6,0,HIGH
+FAC-SEA-05,Seafood & Marine Export,44.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,20.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,20.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,20.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,22.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,22.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,22.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,24.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,24.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,24.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,26.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,26.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,26.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,28.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,28.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,28.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,30.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,30.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,30.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,32.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,32.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,32.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,34.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,34.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,34.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,36.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,36.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,36.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,38.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,38.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,38.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,40.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,40.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,40.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,42.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,42.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,42.0,1.0,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,44.0,0.3,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,44.0,0.6,0,HIGH
+FAC-MLK-06,Dairy & Chilled Milk,44.0,1.0,0,HIGH
