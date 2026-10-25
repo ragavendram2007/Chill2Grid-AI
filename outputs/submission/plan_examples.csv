@@ -1,0 +1,37 @@
+Scenario Label,Ambient (°C),Target (kW),Facility,Status,Approved Min,Restart Delay,Expected Cut P10 (kW),Binding Constraint / Reason
+"Morning Off-Peak (25°C, 30m, 100kW)",25.0,100.0,FAC-FZN-01,SELECTED,15,10,103.95,Selected for 104.0 kW cut with 10m stagger (approval 100%).
+"Morning Off-Peak (25°C, 30m, 100kW)",25.0,100.0,FAC-ICE-02,EXCLUDED,0,0,0.0,INSUFFICIENT_WINDOW: REFUSE: Curtailment headroom insufficient (9.0m < 10m). Cooling must continue.
+"Morning Off-Peak (25°C, 30m, 100kW)",25.0,100.0,FAC-VAX-03,EXCLUDED,0,0,0.0,KEY1_CONFORMAL: Approved shortened window 10m (requested 30m). Bounded by KEY1_CONFORMAL.
+"Morning Off-Peak (25°C, 30m, 100kW)",25.0,100.0,FAC-PRD-04,SELECTED,15,10,43.96,Selected for 44.0 kW cut with 10m stagger (approval 100%).
+"Morning Off-Peak (25°C, 30m, 100kW)",25.0,100.0,FAC-SEA-05,SELECTED,15,0,85.05,Selected for 85.0 kW cut with 0m stagger (approval 100%).
+"Morning Off-Peak (25°C, 30m, 100kW)",25.0,100.0,FAC-MLK-06,EXCLUDED,0,0,0.0,INSUFFICIENT_WINDOW: REFUSE: Curtailment headroom insufficient (3.0m < 10m). Cooling must continue.
+"Mid-Day Solar Ramp (30°C, 45m, 150kW)",30.0,150.0,FAC-FZN-01,SELECTED,15,5,103.95,Selected for 104.0 kW cut with 5m stagger (approval 100%).
+"Mid-Day Solar Ramp (30°C, 45m, 150kW)",30.0,150.0,FAC-ICE-02,EXCLUDED,0,0,0.0,INSUFFICIENT_WINDOW: REFUSE: Curtailment headroom insufficient (6.0m < 10m). Cooling must continue.
+"Mid-Day Solar Ramp (30°C, 45m, 150kW)",30.0,150.0,FAC-VAX-03,EXCLUDED,0,0,0.0,INSUFFICIENT_WINDOW: REFUSE: Curtailment headroom insufficient (6.0m < 8m). Cooling must continue.
+"Mid-Day Solar Ramp (30°C, 45m, 150kW)",30.0,150.0,FAC-PRD-04,SELECTED,15,20,88.47,Selected for 88.5 kW cut with 20m stagger (approval 100%).
+"Mid-Day Solar Ramp (30°C, 45m, 150kW)",30.0,150.0,FAC-SEA-05,SELECTED,15,0,85.05,Selected for 85.0 kW cut with 0m stagger (approval 100%).
+"Mid-Day Solar Ramp (30°C, 45m, 150kW)",30.0,150.0,FAC-MLK-06,EXCLUDED,0,0,0.0,INSUFFICIENT_WINDOW: REFUSE: Curtailment headroom insufficient (1.0m < 10m). Cooling must continue.
+"Evening Peak Dispatch (35°C, 60m, 200kW)",35.0,200.0,FAC-FZN-01,SELECTED,15,0,103.95,Selected for 104.0 kW cut with 0m stagger (approval 100%).
+"Evening Peak Dispatch (35°C, 60m, 200kW)",35.0,200.0,FAC-ICE-02,EXCLUDED,0,0,0.0,INSUFFICIENT_WINDOW: REFUSE: Curtailment headroom insufficient (5.0m < 10m). Cooling must continue.
+"Evening Peak Dispatch (35°C, 60m, 200kW)",35.0,200.0,FAC-VAX-03,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (35.0°C >= 35°C). Curtailment prohibited for FAC-VAX-03.
+"Evening Peak Dispatch (35°C, 60m, 200kW)",35.0,200.0,FAC-PRD-04,SELECTED,15,20,111.6,Selected for 111.6 kW cut with 20m stagger (approval 100%).
+"Evening Peak Dispatch (35°C, 60m, 200kW)",35.0,200.0,FAC-SEA-05,SELECTED,15,0,87.08,Selected for 87.1 kW cut with 0m stagger (approval 100%).
+"Evening Peak Dispatch (35°C, 60m, 200kW)",35.0,200.0,FAC-MLK-06,EXCLUDED,0,0,0.0,INSUFFICIENT_WINDOW: REFUSE: Curtailment headroom insufficient (0.0m < 10m). Cooling must continue.
+"High Heat Stress (38°C, 30m, 250kW)",38.0,250.0,FAC-FZN-01,SELECTED,13,0,101.51,Selected for 101.5 kW cut with 0m stagger (approval 100%).
+"High Heat Stress (38°C, 30m, 250kW)",38.0,250.0,FAC-ICE-02,EXCLUDED,0,0,0.0,INSUFFICIENT_WINDOW: REFUSE: Curtailment headroom insufficient (4.0m < 10m). Cooling must continue.
+"High Heat Stress (38°C, 30m, 250kW)",38.0,250.0,FAC-VAX-03,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (38.0°C >= 35°C). Curtailment prohibited for FAC-VAX-03.
+"High Heat Stress (38°C, 30m, 250kW)",38.0,250.0,FAC-PRD-04,SELECTED,15,10,111.6,Selected for 111.6 kW cut with 10m stagger (approval 100%).
+"High Heat Stress (38°C, 30m, 250kW)",38.0,250.0,FAC-SEA-05,SELECTED,15,0,87.36,Selected for 87.4 kW cut with 0m stagger (approval 100%).
+"High Heat Stress (38°C, 30m, 250kW)",38.0,250.0,FAC-MLK-06,EXCLUDED,0,0,0.0,INSUFFICIENT_WINDOW: REFUSE: Curtailment headroom insufficient (0.0m < 10m). Cooling must continue.
+"Severe Heat Wave Lockout (42°C, 30m, 120kW)",42.0,120.0,FAC-FZN-01,SELECTED,11,0,103.38,Selected for 103.4 kW cut with 0m stagger (approval 100%).
+"Severe Heat Wave Lockout (42°C, 30m, 120kW)",42.0,120.0,FAC-ICE-02,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (42.0°C >= 42°C). Curtailment prohibited for FAC-ICE-02.
+"Severe Heat Wave Lockout (42°C, 30m, 120kW)",42.0,120.0,FAC-VAX-03,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (42.0°C >= 35°C). Curtailment prohibited for FAC-VAX-03.
+"Severe Heat Wave Lockout (42°C, 30m, 120kW)",42.0,120.0,FAC-PRD-04,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Steady-state duty cycle (97.5% >= 90%) precludes post-event recovery.
+"Severe Heat Wave Lockout (42°C, 30m, 120kW)",42.0,120.0,FAC-SEA-05,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (42.0°C >= 42°C). Curtailment prohibited for FAC-SEA-05.
+"Severe Heat Wave Lockout (42°C, 30m, 120kW)",42.0,120.0,FAC-MLK-06,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (42.0°C >= 42°C). Curtailment prohibited for FAC-MLK-06.
+"Extreme Peak Shortfall (44°C, 45m, 300kW)",44.0,300.0,FAC-FZN-01,SELECTED,10,0,103.35,Selected for 103.3 kW cut with 0m stagger (approval 100%).
+"Extreme Peak Shortfall (44°C, 45m, 300kW)",44.0,300.0,FAC-ICE-02,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (44.0°C >= 42°C). Curtailment prohibited for FAC-ICE-02.
+"Extreme Peak Shortfall (44°C, 45m, 300kW)",44.0,300.0,FAC-VAX-03,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (44.0°C >= 35°C). Curtailment prohibited for FAC-VAX-03.
+"Extreme Peak Shortfall (44°C, 45m, 300kW)",44.0,300.0,FAC-PRD-04,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Steady-state duty cycle (100.0% >= 90%) precludes post-event recovery.
+"Extreme Peak Shortfall (44°C, 45m, 300kW)",44.0,300.0,FAC-SEA-05,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (44.0°C >= 42°C). Curtailment prohibited for FAC-SEA-05.
+"Extreme Peak Shortfall (44°C, 45m, 300kW)",44.0,300.0,FAC-MLK-06,EXCLUDED,0,0,0.0,CAPACITY_LIMITED: REFUSE: Severe ambient temperature (44.0°C >= 42°C). Curtailment prohibited for FAC-MLK-06.

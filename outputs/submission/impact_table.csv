@@ -1,0 +1,10 @@
+Ambient (°C) [simulated],Duration (min) [simulated],Approved Facilities [simulated],Peak Shaved (kW) [simulated],Energy Shifted (kWh) [simulated],Rebound Repaid (kWh) [simulated],Net Energy (kWh) [simulated],Net Interpretation [simulated],Cost Avoided (INR) [assumption (illustrative)],CO2 Avoided (kg) [assumption (illustrative)],Unstaggered Rebound Peak (kW) [simulated],Staggered Rebound Peak (kW) [simulated]
+25,30,3,0.0,106.5,106.5,0.0,indistinguishable from 0,0.0,0.0,520.63,475.29
+25,60,3,0.0,176.4,176.4,0.0,indistinguishable from 0,0.0,0.0,478.78,478.78
+25,90,3,0.0,176.4,176.4,0.0,indistinguishable from 0,0.0,0.0,425.71,425.71
+35,30,3,0.0,106.5,106.5,0.0,indistinguishable from 0,0.0,0.0,629.61,584.6
+35,60,3,0.0,160.6,160.6,0.0,indistinguishable from 0,0.0,0.0,655.58,655.58
+35,90,3,0.0,160.6,160.6,0.0,indistinguishable from 0,0.0,0.0,574.96,574.96
+40,30,3,0.0,110.5,110.5,0.0,indistinguishable from 0,0.0,0.0,747.24,747.24
+40,60,3,0.0,110.5,110.5,0.0,indistinguishable from 0,0.0,0.0,654.65,654.65
+40,90,3,0.0,110.5,110.5,0.0,indistinguishable from 0,0.0,0.0,654.65,654.65

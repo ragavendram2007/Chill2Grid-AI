@@ -16,11 +16,13 @@ htmlcov/
 scratch/
 
 # Runtime output directory
-outputs/
+outputs/*
+!outputs/submission/
 
 # Large generated datasets
 data/safety/calib_extra.csv
 data/safety/redteam.csv
+data/optimizer/response_library.*
 
 # Serialized ML model weights
 *.joblib

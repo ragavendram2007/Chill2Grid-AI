@@ -1,0 +1,26 @@
+{
+  "status": "READY",
+  "evaluated_at": "2026-10-25T16:32:00Z",
+  "all_checks_passed": true,
+  "checklist": {
+    "R1_single_ledger": "PASS",
+    "R2_invariants": "PASS",
+    "R3_reconciliation": "PASS",
+    "R4_unrecovered_rejection": "PASS",
+    "R5_calibrated_lambdas": "PASS",
+    "R6_breach_separation": "PASS",
+    "R7_variant_f_honest_monitor": "PASS",
+    "R8_schedulable_flexibility": "PASS",
+    "R9_stress_test_battery": "PASS",
+    "R10_pytest_suite": "PASS"
+  },
+  "provenance": {
+    "prd04_cycle_min": 166.0,
+    "prd04_mean_saved_kwh": 139.5,
+    "prd04_on_share": "11/12 (91.7%)",
+    "vax03_cop_35": 1.70,
+    "vax03_electrical_energy_35c_kwh": 0.0791,
+    "vax03_thermal_energy_35c_kwh": 0.1345
+  },
+  "tests_passed": 83
+}

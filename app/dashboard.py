@@ -24,7 +24,8 @@ import streamlit as st
 
 from core.contracts import CurtailmentAction, Facility, load_facilities_from_csv
 from impact.assess import assess_plan_impact, load_grid_assumptions
-from optimizer.plan_event import GridEventRequest, Plan, plan_grid_event
+from optimizer.plan_event import plan_grid_event
+from optimizer.types import GridEvent, Plan, PlannedAction
 from safety.audit import verify_audit_chain
 from safety.safety_guardian import get_default_guardian
 from safety.types import FleetSnapshot
@@ -358,64 +359,61 @@ with tab2:
         for f in facilities
     }
 
-    req_obj = GridEventRequest(
+    req_obj = GridEvent(
         start_min=start_min_val,
         duration_min=event_dur_val,
-        target_reduction_kw=float(target_kw_val),
-        outside_temp_c=outside_temp,
+        target_kw=float(target_kw_val),
     )
 
-    live_plan = plan_grid_event(req_obj, snaps_dict, facilities, guardian=opt_guardian)
+    live_plan = plan_grid_event(
+        event=req_obj,
+        fleet_state=snaps_dict,
+        ambient_profile_c=outside_temp,
+        guardian=opt_guardian,
+        facilities=facilities,
+    )
 
     st.markdown("### Optimized Dispatch Schedule")
     schedule_rows = []
-    for p_item in live_plan.facility_plans:
+    scheduled_ids = {a.facility_id for a in live_plan.actions}
+    for a in live_plan.actions:
         schedule_rows.append({
-            "Facility": p_item.facility_id,
-            "Start Min": p_item.action.start_min,
-            "Approved (min)": p_item.approved_duration_min,
-            "Start Offset (min)": p_item.start_offset_min,
-            "Restart Delay (min)": p_item.restart_delay_min,
-            "Expected Cut (kW)": p_item.expected_kw_cut,
-            "Binding Constraint": p_item.verdict.binding_constraint,
-            "Verdict": p_item.verdict.decision,
+            "Facility": a.facility_id,
+            "Start Min": a.start_min,
+            "Approved (min)": a.duration_min,
+            "Restart Delay (min)": a.restart_delay_min,
+            "Expected Cut P10 (kW)": a.expected_kw_cut_p10,
+            "Approval Rate": f"{a.approval_fraction * 100:.0f}%",
+            "Verdict": "APPROVED",
+            "Reason": a.reason,
         })
-    for fac_id, r_reason in live_plan.excluded_reasons.items():
-        schedule_rows.append({
-            "Facility": fac_id,
-            "Start Min": start_min_val,
-            "Approved (min)": 0.0,
-            "Start Offset (min)": 0,
-            "Restart Delay (min)": 0,
-            "Expected Cut (kW)": 0.0,
-            "Binding Constraint": r_reason.split(":")[0],
-            "Verdict": "EXCLUDED",
-        })
+    for fac_id, r_reason in live_plan.reasons.items():
+        if fac_id not in scheduled_ids:
+            schedule_rows.append({
+                "Facility": fac_id,
+                "Start Min": start_min_val,
+                "Approved (min)": 0.0,
+                "Restart Delay (min)": 0,
+                "Expected Cut P10 (kW)": 0.0,
+                "Approval Rate": "0%",
+                "Verdict": "EXCLUDED",
+                "Reason": r_reason,
+            })
 
     st.dataframe(pd.DataFrame(schedule_rows), use_container_width=True)
 
     # Power Curves Plot
     st.markdown("### Fleet Demand Profile & Staggered Rebound Peak (Simulated)")
     hours_axis = np.linspace(0, 24, 288)
-    base_kw_axis = 220.0 + 35.0 * np.sin(np.pi * (hours_axis - 8) / 12.0) + 15.0 * np.cos(hours_axis * 3)
-    start_h = start_min_val / 60.0
-    dur_h = event_dur_val / 60.0
-
+    base_kw_axis = np.array(live_plan.fleet_baseline_power[:288]) if len(live_plan.fleet_baseline_power) >= 288 else np.linspace(250, 450, 288)
     un_curve = base_kw_axis.copy()
-    st_curve = base_kw_axis.copy()
-    in_ev = (hours_axis >= start_h) & (hours_axis < start_h + dur_h)
-    un_curve[in_ev] -= (live_plan.total_cut_kw * 0.85)
-    st_curve[in_ev] -= (live_plan.total_cut_kw * 0.85)
-
-    in_rb_un = (hours_axis >= start_h + dur_h) & (hours_axis < start_h + dur_h + 1.0)
-    un_curve[in_rb_un] += (live_plan.total_cut_kw * 0.70)
-    in_rb_st = (hours_axis >= start_h + dur_h) & (hours_axis < start_h + dur_h + 1.8)
-    st_curve[in_rb_st] += (live_plan.total_cut_kw * 0.35)
+    st_curve = np.array(live_plan.event_power_curve[:288]) if len(live_plan.event_power_curve) >= 288 else base_kw_axis.copy()
+    total_cut_kw = sum(a.expected_kw_cut_p10 for a in live_plan.actions)
 
     p1, p2, p3 = st.columns(3)
     p1.metric("Baseline Peak Power", f"{float(np.max(base_kw_axis)):.1f} kW")
-    p2.metric("Unstaggered Rebound Peak", f"{float(np.max(un_curve)):.1f} kW", delta=f"{float(np.max(un_curve) - np.max(base_kw_axis)):+.1f} kW", delta_color="inverse")
-    p3.metric("Staggered Rebound Peak", f"{float(np.max(st_curve)):.1f} kW", delta=f"{float(np.max(st_curve) - np.max(un_curve)):.1f} kW vs Unstaggered", delta_color="normal")
+    p2.metric("Unstaggered Rebound Peak", f"{live_plan.rebound_peak_unstaggered:.1f} kW", delta=f"{live_plan.rebound_peak_unstaggered - float(np.max(base_kw_axis)):+.1f} kW", delta_color="inverse")
+    p3.metric("Staggered Rebound Peak", f"{live_plan.rebound_peak_staggered:.1f} kW", delta=f"{live_plan.rebound_peak_staggered - live_plan.rebound_peak_unstaggered:.1f} kW vs Unstaggered", delta_color="normal")
 
     fig_p = go.Figure()
     fig_p.add_trace(go.Scatter(x=hours_axis, y=base_kw_axis, name="Baseline Fleet Power", line=dict(color="#9CA3AF", dash="dot")))

@@ -1,4 +1,4 @@
-# replace with utility tariff and grid operator data; not real measurements
+# ILLUSTRATIVE PLACEHOLDERS; replace with utility tariff and grid operator data; not real measurements
 hour,tariff_inr_per_kwh,grid_co2_g_per_kwh
 0,4.0,580.0
 1,4.0,570.0

@@ -1,0 +1,4 @@
+Risk Tier,Total Requests,Approved Count,Approval Rate (%),Preexisting Breaches (Approved),Event-Caused Hard Breaches,Hard Breach Rate (%),Hard Breach 95% Scenario Bound,Soft Violations (Approved),Soft Violation Rate (%),Target Alpha (%),Immediate Flexibility Retained (%),30m Wait Flexibility Retained (%),Status
+CRITICAL,1200,0,0.0,0,0,NaN,N/A,0,NaN,1.0,0.0,51.0,NO EVIDENCE (policy: never approve)
+HIGH,1200,3,0.25,0,0,0.0,0.7764,0,0.0,5.0,0.8,19.2,PASS (simulated)
+STANDARD,800,135,16.88,0,0,0.0,0.1616,0,0.0,10.0,13.6,32.7,PASS (simulated)
