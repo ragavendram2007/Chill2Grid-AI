@@ -1,461 +1,686 @@
 {
   "rules_version": "1.0.0",
   "model_version": "1.1.0",
-  "git_commit": "27d2c20",
-  "created_at_utc": "2026-10-24T18:55:34.968449+00:00",
+  "git_commit": "43f26de",
+  "created_at_utc": "2026-10-25T03:58:28.872299+00:00",
   "total_calibration_scenarios": 900,
   "total_decision_records": 18000,
-  "calibration_duration_sec": 137.9,
+  "calibration_duration_sec": 110.48,
   "key1_bootstrap_shrinks": {
     "CRITICAL": {
-      "pooled": -0.42,
-      "cut_in": -0.76,
-      "mid_cycle": -0.43,
-      "cut_out": 0.0
+      "pooled": -0.38,
+      "cut_in": -0.38,
+      "mid_cycle": -0.38,
+      "cut_out": -0.38
     },
     "HIGH": {
-      "pooled": 0.0,
-      "cut_in": 0.0,
-      "mid_cycle": 0.0,
+      "pooled": -0.18,
+      "cut_in": -0.18,
+      "mid_cycle": -0.38,
       "cut_out": 0.0
     },
     "STANDARD": {
       "pooled": 0.0,
       "cut_in": 0.0,
-      "mid_cycle": 0.0,
+      "mid_cycle": -0.11,
       "cut_out": 0.0
     }
   },
   "key1_audit_stats": {
     "CRITICAL": {
       "pooled": {
-        "record_count": 6000,
-        "scenario_count": 300,
-        "plain_quantile": -0.42,
-        "calibrated_shrink": -0.42,
-        "bootstrap_q5": -0.663,
-        "bootstrap_q95": -0.208,
-        "bootstrap_spread": 0.455,
-        "is_fallback": false
-      },
-      "cut_in": {
-        "record_count": 1769,
-        "scenario_count": 286,
-        "plain_quantile": -0.76,
-        "calibrated_shrink": -0.76,
-        "bootstrap_q5": -1.384,
-        "bootstrap_q95": -0.42,
-        "bootstrap_spread": 0.964,
-        "is_fallback": false
-      },
-      "mid_cycle": {
-        "record_count": 2677,
-        "scenario_count": 300,
-        "plain_quantile": -0.43,
-        "calibrated_shrink": -0.43,
-        "bootstrap_q5": -0.711,
-        "bootstrap_q95": -0.166,
-        "bootstrap_spread": 0.545,
-        "is_fallback": false
-      },
-      "cut_out": {
-        "record_count": 1554,
-        "scenario_count": 278,
+        "record_count": 101,
+        "scenario_count": 72,
         "plain_quantile": 0.0,
         "calibrated_shrink": 0.0,
-        "bootstrap_q5": 0.0,
-        "bootstrap_q95": 0.0,
+        "bootstrap_q5": -0.307,
+        "bootstrap_q95": 1.669,
+        "bootstrap_spread": 1.975,
+        "is_fallback": true
+      },
+      "cut_in": {
+        "record_count": 0,
+        "scenario_count": 0,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": -10.0,
+        "bootstrap_q95": -10.0,
         "bootstrap_spread": 0.0,
-        "is_fallback": false
+        "is_fallback": true
+      },
+      "mid_cycle": {
+        "record_count": 0,
+        "scenario_count": 0,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": -10.0,
+        "bootstrap_q95": -10.0,
+        "bootstrap_spread": 0.0,
+        "is_fallback": true
+      },
+      "cut_out": {
+        "record_count": 101,
+        "scenario_count": 72,
+        "plain_quantile": 0.0,
+        "calibrated_shrink": 0.0,
+        "bootstrap_q5": -0.327,
+        "bootstrap_q95": 1.783,
+        "bootstrap_spread": 2.11,
+        "is_fallback": true
       }
     },
     "HIGH": {
       "pooled": {
-        "record_count": 7200,
-        "scenario_count": 360,
-        "plain_quantile": 0.0,
-        "calibrated_shrink": 0.0,
-        "bootstrap_q5": 0.0,
-        "bootstrap_q95": 0.0,
-        "bootstrap_spread": 0.0,
+        "record_count": 843,
+        "scenario_count": 227,
+        "plain_quantile": -0.18,
+        "calibrated_shrink": -0.18,
+        "bootstrap_q5": -0.642,
+        "bootstrap_q95": 0.289,
+        "bootstrap_spread": 0.931,
         "is_fallback": false
       },
       "cut_in": {
-        "record_count": 1881,
-        "scenario_count": 321,
-        "plain_quantile": 0.0,
-        "calibrated_shrink": 0.0,
-        "bootstrap_q5": 0.0,
-        "bootstrap_q95": 0.0,
+        "record_count": 0,
+        "scenario_count": 0,
+        "plain_quantile": -0.18,
+        "calibrated_shrink": -0.18,
+        "bootstrap_q5": -10.0,
+        "bootstrap_q95": -10.0,
         "bootstrap_spread": 0.0,
-        "is_fallback": false
+        "is_fallback": true
       },
       "mid_cycle": {
-        "record_count": 3533,
-        "scenario_count": 360,
-        "plain_quantile": 0.0,
-        "calibrated_shrink": 0.0,
-        "bootstrap_q5": -0.01,
-        "bootstrap_q95": 0.0,
-        "bootstrap_spread": 0.01,
+        "record_count": 443,
+        "scenario_count": 122,
+        "plain_quantile": -0.38,
+        "calibrated_shrink": -0.38,
+        "bootstrap_q5": -0.941,
+        "bootstrap_q95": 0.23,
+        "bootstrap_spread": 1.171,
         "is_fallback": false
       },
       "cut_out": {
-        "record_count": 1786,
-        "scenario_count": 309,
+        "record_count": 400,
+        "scenario_count": 208,
         "plain_quantile": 0.0,
         "calibrated_shrink": 0.0,
-        "bootstrap_q5": -0.12,
-        "bootstrap_q95": 0.0,
-        "bootstrap_spread": 0.12,
+        "bootstrap_q5": -0.454,
+        "bootstrap_q95": 0.545,
+        "bootstrap_spread": 0.999,
         "is_fallback": false
       }
     },
     "STANDARD": {
       "pooled": {
-        "record_count": 4800,
-        "scenario_count": 240,
+        "record_count": 647,
+        "scenario_count": 169,
         "plain_quantile": 0.0,
         "calibrated_shrink": 0.0,
-        "bootstrap_q5": 0.0,
-        "bootstrap_q95": 0.755,
-        "bootstrap_spread": 0.755,
+        "bootstrap_q5": -0.082,
+        "bootstrap_q95": 1.474,
+        "bootstrap_spread": 1.556,
         "is_fallback": false
       },
       "cut_in": {
-        "record_count": 1316,
-        "scenario_count": 224,
+        "record_count": 0,
+        "scenario_count": 0,
         "plain_quantile": 0.0,
         "calibrated_shrink": 0.0,
-        "bootstrap_q5": 0.0,
-        "bootstrap_q95": 1.207,
-        "bootstrap_spread": 1.207,
-        "is_fallback": false
+        "bootstrap_q5": -10.0,
+        "bootstrap_q95": -10.0,
+        "bootstrap_spread": 0.0,
+        "is_fallback": true
       },
       "mid_cycle": {
-        "record_count": 2204,
-        "scenario_count": 240,
-        "plain_quantile": 0.0,
-        "calibrated_shrink": 0.0,
-        "bootstrap_q5": 0.0,
-        "bootstrap_q95": 0.791,
-        "bootstrap_spread": 0.791,
+        "record_count": 359,
+        "scenario_count": 101,
+        "plain_quantile": -0.11,
+        "calibrated_shrink": -0.11,
+        "bootstrap_q5": -0.912,
+        "bootstrap_q95": 1.435,
+        "bootstrap_spread": 2.347,
         "is_fallback": false
       },
       "cut_out": {
-        "record_count": 1280,
-        "scenario_count": 219,
+        "record_count": 288,
+        "scenario_count": 159,
         "plain_quantile": 0.0,
         "calibrated_shrink": 0.0,
-        "bootstrap_q5": 0.0,
-        "bootstrap_q95": 0.342,
-        "bootstrap_spread": 0.342,
+        "bootstrap_q5": 0.559,
+        "bootstrap_q95": 1.92,
+        "bootstrap_spread": 1.361,
         "is_fallback": false
       }
     }
   },
   "key2_calibrated_lambdas": {
-    "CRITICAL": 0.8,
+    "CRITICAL": 0.45,
     "HIGH": 0.4,
-    "STANDARD": 0.35
+    "STANDARD": 0.4
   },
   "key2_pareto_table": [
     {
       "tier": "CRITICAL",
       "lambda": 0.0,
-      "coverage": 0.5567,
-      "soft_violation_rate": 0.4433,
-      "hard_breach_rate": 0.02,
-      "mean_safe_min": 20.51,
-      "flexibility_retained": 1.0319
+      "coverage": 0.1287,
+      "soft_violation_rate": 0.8713,
+      "hard_breach_rate": 0.0594,
+      "mean_safe_min": 39.57,
+      "flexibility_retained": 1.1875
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.05,
+      "coverage": 0.198,
+      "soft_violation_rate": 0.802,
+      "hard_breach_rate": 0.0099,
+      "mean_safe_min": 37.41,
+      "flexibility_retained": 1.1222
     },
     {
       "tier": "CRITICAL",
       "lambda": 0.1,
-      "coverage": 0.6433,
-      "soft_violation_rate": 0.3567,
-      "hard_breach_rate": 0.0033,
-      "mean_safe_min": 18.7,
-      "flexibility_retained": 0.9411
+      "coverage": 0.297,
+      "soft_violation_rate": 0.703,
+      "hard_breach_rate": 0.0099,
+      "mean_safe_min": 35.35,
+      "flexibility_retained": 1.0603
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.15,
+      "coverage": 0.4851,
+      "soft_violation_rate": 0.5149,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 33.34,
+      "flexibility_retained": 0.9997
     },
     {
       "tier": "CRITICAL",
       "lambda": 0.2,
-      "coverage": 0.7783,
-      "soft_violation_rate": 0.2217,
-      "hard_breach_rate": 0.0017,
-      "mean_safe_min": 17.01,
-      "flexibility_retained": 0.857
+      "coverage": 0.6535,
+      "soft_violation_rate": 0.3465,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 31.37,
+      "flexibility_retained": 0.9398
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.25,
+      "coverage": 0.82,
+      "soft_violation_rate": 0.18,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 29.68,
+      "flexibility_retained": 0.885
     },
     {
       "tier": "CRITICAL",
       "lambda": 0.3,
-      "coverage": 0.885,
-      "soft_violation_rate": 0.115,
+      "coverage": 0.9091,
+      "soft_violation_rate": 0.0909,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 15.43,
-      "flexibility_retained": 0.7784
+      "mean_safe_min": 28.03,
+      "flexibility_retained": 0.8308
     },
     {
       "tier": "CRITICAL",
       "lambda": 0.35,
-      "coverage": 0.9233,
-      "soft_violation_rate": 0.0767,
+      "coverage": 0.9899,
+      "soft_violation_rate": 0.0101,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 14.67,
-      "flexibility_retained": 0.7406
+      "mean_safe_min": 26.2,
+      "flexibility_retained": 0.7765
     },
     {
       "tier": "CRITICAL",
       "lambda": 0.4,
-      "coverage": 0.9583,
-      "soft_violation_rate": 0.0417,
+      "coverage": 0.9899,
+      "soft_violation_rate": 0.0101,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 13.92,
-      "flexibility_retained": 0.7041
+      "mean_safe_min": 24.46,
+      "flexibility_retained": 0.7249
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.45,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 22.7,
+      "flexibility_retained": 0.6726
     },
     {
       "tier": "CRITICAL",
       "lambda": 0.5,
-      "coverage": 0.9817,
-      "soft_violation_rate": 0.0183,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 12.5,
-      "flexibility_retained": 0.6325
+      "mean_safe_min": 21.06,
+      "flexibility_retained": 0.6233
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.55,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 19.55,
+      "flexibility_retained": 0.576
     },
     {
       "tier": "CRITICAL",
       "lambda": 0.6,
-      "coverage": 0.985,
-      "soft_violation_rate": 0.015,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 11.18,
-      "flexibility_retained": 0.5667
+      "mean_safe_min": 18.03,
+      "flexibility_retained": 0.5313
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.65,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 16.5,
+      "flexibility_retained": 0.4837
     },
     {
       "tier": "CRITICAL",
       "lambda": 0.7,
-      "coverage": 0.9883,
-      "soft_violation_rate": 0.0117,
-      "hard_breach_rate": 0.0,
-      "mean_safe_min": 9.9,
-      "flexibility_retained": 0.5037
-    },
-    {
-      "tier": "CRITICAL",
-      "lambda": 0.8,
-      "coverage": 0.9917,
-      "soft_violation_rate": 0.0083,
-      "hard_breach_rate": 0.0,
-      "mean_safe_min": 8.7,
-      "flexibility_retained": 0.4428
-    },
-    {
-      "tier": "CRITICAL",
-      "lambda": 0.9,
-      "coverage": 0.995,
-      "soft_violation_rate": 0.005,
-      "hard_breach_rate": 0.0,
-      "mean_safe_min": 7.58,
-      "flexibility_retained": 0.3873
-    },
-    {
-      "tier": "CRITICAL",
-      "lambda": 1.0,
-      "coverage": 0.9983,
-      "soft_violation_rate": 0.0017,
-      "hard_breach_rate": 0.0,
-      "mean_safe_min": 6.52,
-      "flexibility_retained": 0.3339
-    },
-    {
-      "tier": "HIGH",
-      "lambda": 0.0,
-      "coverage": 0.535,
-      "soft_violation_rate": 0.465,
-      "hard_breach_rate": 0.17,
-      "mean_safe_min": 30.58,
-      "flexibility_retained": 1.0132
-    },
-    {
-      "tier": "HIGH",
-      "lambda": 0.1,
-      "coverage": 0.6167,
-      "soft_violation_rate": 0.3833,
-      "hard_breach_rate": 0.08,
-      "mean_safe_min": 27.67,
-      "flexibility_retained": 0.9139
-    },
-    {
-      "tier": "HIGH",
-      "lambda": 0.2,
-      "coverage": 0.7317,
-      "soft_violation_rate": 0.2683,
-      "hard_breach_rate": 0.0233,
-      "mean_safe_min": 24.87,
-      "flexibility_retained": 0.8181
-    },
-    {
-      "tier": "HIGH",
-      "lambda": 0.3,
-      "coverage": 0.8683,
-      "soft_violation_rate": 0.1317,
-      "hard_breach_rate": 0.0067,
-      "mean_safe_min": 22.23,
-      "flexibility_retained": 0.729
-    },
-    {
-      "tier": "HIGH",
-      "lambda": 0.35,
-      "coverage": 0.9217,
-      "soft_violation_rate": 0.0783,
-      "hard_breach_rate": 0.005,
-      "mean_safe_min": 20.99,
-      "flexibility_retained": 0.6871
-    },
-    {
-      "tier": "HIGH",
-      "lambda": 0.4,
-      "coverage": 0.9567,
-      "soft_violation_rate": 0.0433,
-      "hard_breach_rate": 0.0033,
-      "mean_safe_min": 19.77,
-      "flexibility_retained": 0.646
-    },
-    {
-      "tier": "HIGH",
-      "lambda": 0.5,
-      "coverage": 0.985,
-      "soft_violation_rate": 0.015,
-      "hard_breach_rate": 0.0017,
-      "mean_safe_min": 17.46,
-      "flexibility_retained": 0.5683
-    },
-    {
-      "tier": "HIGH",
-      "lambda": 0.6,
-      "coverage": 0.9917,
-      "soft_violation_rate": 0.0083,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
       "mean_safe_min": 15.3,
-      "flexibility_retained": 0.4962
+      "flexibility_retained": 0.4417
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.75,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 14.51,
+      "flexibility_retained": 0.4054
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.8,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 13.46,
+      "flexibility_retained": 0.3695
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.85,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 12.76,
+      "flexibility_retained": 0.3365
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.9,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 12.06,
+      "flexibility_retained": 0.3034
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 0.95,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 11.8,
+      "flexibility_retained": 0.2765
+    },
+    {
+      "tier": "CRITICAL",
+      "lambda": 1.0,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 11.36,
+      "flexibility_retained": 0.2444
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.0,
+      "coverage": 0.1292,
+      "soft_violation_rate": 0.8708,
+      "hard_breach_rate": 0.2946,
+      "mean_safe_min": 42.37,
+      "flexibility_retained": 1.225
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.05,
+      "coverage": 0.2161,
+      "soft_violation_rate": 0.7839,
+      "hard_breach_rate": 0.1745,
+      "mean_safe_min": 40.37,
+      "flexibility_retained": 1.1593
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.1,
+      "coverage": 0.3429,
+      "soft_violation_rate": 0.6571,
+      "hard_breach_rate": 0.0969,
+      "mean_safe_min": 38.21,
+      "flexibility_retained": 1.0921
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.15,
+      "coverage": 0.4802,
+      "soft_violation_rate": 0.5198,
+      "hard_breach_rate": 0.066,
+      "mean_safe_min": 36.21,
+      "flexibility_retained": 1.027
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.2,
+      "coverage": 0.6243,
+      "soft_violation_rate": 0.3757,
+      "hard_breach_rate": 0.0397,
+      "mean_safe_min": 34.09,
+      "flexibility_retained": 0.9625
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.25,
+      "coverage": 0.7739,
+      "soft_violation_rate": 0.2261,
+      "hard_breach_rate": 0.016,
+      "mean_safe_min": 32.07,
+      "flexibility_retained": 0.9017
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.3,
+      "coverage": 0.8703,
+      "soft_violation_rate": 0.1297,
+      "hard_breach_rate": 0.0054,
+      "mean_safe_min": 30.3,
+      "flexibility_retained": 0.8414
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.35,
+      "coverage": 0.9337,
+      "soft_violation_rate": 0.0663,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 28.66,
+      "flexibility_retained": 0.7855
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.4,
+      "coverage": 0.966,
+      "soft_violation_rate": 0.034,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 27.12,
+      "flexibility_retained": 0.7354
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.45,
+      "coverage": 0.9796,
+      "soft_violation_rate": 0.0204,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 25.59,
+      "flexibility_retained": 0.6834
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.5,
+      "coverage": 0.9909,
+      "soft_violation_rate": 0.0091,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 24.33,
+      "flexibility_retained": 0.6347
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.55,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 23.47,
+      "flexibility_retained": 0.5948
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.6,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 22.3,
+      "flexibility_retained": 0.555
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.65,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 21.49,
+      "flexibility_retained": 0.5195
     },
     {
       "tier": "HIGH",
       "lambda": 0.7,
-      "coverage": 0.995,
-      "soft_violation_rate": 0.005,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 13.31,
-      "flexibility_retained": 0.4299
+      "mean_safe_min": 20.75,
+      "flexibility_retained": 0.4898
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.75,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 20.23,
+      "flexibility_retained": 0.4659
     },
     {
       "tier": "HIGH",
       "lambda": 0.8,
-      "coverage": 0.995,
-      "soft_violation_rate": 0.005,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 11.5,
-      "flexibility_retained": 0.3698
+      "mean_safe_min": 19.49,
+      "flexibility_retained": 0.4412
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.85,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 19.04,
+      "flexibility_retained": 0.4272
     },
     {
       "tier": "HIGH",
       "lambda": 0.9,
-      "coverage": 0.995,
-      "soft_violation_rate": 0.005,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 9.91,
-      "flexibility_retained": 0.3191
+      "mean_safe_min": 18.27,
+      "flexibility_retained": 0.4057
+    },
+    {
+      "tier": "HIGH",
+      "lambda": 0.95,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 17.17,
+      "flexibility_retained": 0.3807
     },
     {
       "tier": "HIGH",
       "lambda": 1.0,
-      "coverage": 0.9967,
-      "soft_violation_rate": 0.0033,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 8.5,
-      "flexibility_retained": 0.2744
+      "mean_safe_min": 16.27,
+      "flexibility_retained": 0.3556
     },
     {
       "tier": "STANDARD",
       "lambda": 0.0,
-      "coverage": 0.5067,
-      "soft_violation_rate": 0.4933,
-      "hard_breach_rate": 0.2783,
-      "mean_safe_min": 65.14,
-      "flexibility_retained": 1.0074
+      "coverage": 0.15,
+      "soft_violation_rate": 0.85,
+      "hard_breach_rate": 0.535,
+      "mean_safe_min": 75.68,
+      "flexibility_retained": 1.1969
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.05,
+      "coverage": 0.1975,
+      "soft_violation_rate": 0.8025,
+      "hard_breach_rate": 0.3925,
+      "mean_safe_min": 72.99,
+      "flexibility_retained": 1.1487
     },
     {
       "tier": "STANDARD",
       "lambda": 0.1,
-      "coverage": 0.605,
-      "soft_violation_rate": 0.395,
-      "hard_breach_rate": 0.17,
-      "mean_safe_min": 60.86,
-      "flexibility_retained": 0.9343
+      "coverage": 0.265,
+      "soft_violation_rate": 0.735,
+      "hard_breach_rate": 0.3,
+      "mean_safe_min": 70.15,
+      "flexibility_retained": 1.0988
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.15,
+      "coverage": 0.4275,
+      "soft_violation_rate": 0.5725,
+      "hard_breach_rate": 0.2,
+      "mean_safe_min": 67.36,
+      "flexibility_retained": 1.0503
     },
     {
       "tier": "STANDARD",
       "lambda": 0.2,
-      "coverage": 0.7417,
-      "soft_violation_rate": 0.2583,
-      "hard_breach_rate": 0.0783,
-      "mean_safe_min": 56.55,
-      "flexibility_retained": 0.8634
+      "coverage": 0.5725,
+      "soft_violation_rate": 0.4275,
+      "hard_breach_rate": 0.1225,
+      "mean_safe_min": 64.47,
+      "flexibility_retained": 1.0013
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.25,
+      "coverage": 0.695,
+      "soft_violation_rate": 0.305,
+      "hard_breach_rate": 0.0725,
+      "mean_safe_min": 61.59,
+      "flexibility_retained": 0.9531
     },
     {
       "tier": "STANDARD",
       "lambda": 0.3,
-      "coverage": 0.865,
-      "soft_violation_rate": 0.135,
-      "hard_breach_rate": 0.0217,
-      "mean_safe_min": 52.17,
-      "flexibility_retained": 0.7925
+      "coverage": 0.78,
+      "soft_violation_rate": 0.22,
+      "hard_breach_rate": 0.0275,
+      "mean_safe_min": 58.74,
+      "flexibility_retained": 0.9056
     },
     {
       "tier": "STANDARD",
       "lambda": 0.35,
-      "coverage": 0.925,
-      "soft_violation_rate": 0.075,
+      "coverage": 0.8546,
+      "soft_violation_rate": 0.1454,
       "hard_breach_rate": 0.01,
-      "mean_safe_min": 50.05,
-      "flexibility_retained": 0.7586
+      "mean_safe_min": 56.0,
+      "flexibility_retained": 0.86
     },
     {
       "tier": "STANDARD",
       "lambda": 0.4,
-      "coverage": 0.9533,
-      "soft_violation_rate": 0.0467,
-      "hard_breach_rate": 0.0033,
-      "mean_safe_min": 47.94,
-      "flexibility_retained": 0.7251
+      "coverage": 0.9298,
+      "soft_violation_rate": 0.0702,
+      "hard_breach_rate": 0.0025,
+      "mean_safe_min": 53.09,
+      "flexibility_retained": 0.8126
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.45,
+      "coverage": 0.9749,
+      "soft_violation_rate": 0.0251,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 50.3,
+      "flexibility_retained": 0.7675
     },
     {
       "tier": "STANDARD",
       "lambda": 0.5,
-      "coverage": 0.9833,
-      "soft_violation_rate": 0.0167,
-      "hard_breach_rate": 0.0017,
-      "mean_safe_min": 43.89,
-      "flexibility_retained": 0.6615
+      "coverage": 0.99,
+      "soft_violation_rate": 0.01,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 47.6,
+      "flexibility_retained": 0.7241
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.55,
+      "coverage": 0.9975,
+      "soft_violation_rate": 0.0025,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 44.89,
+      "flexibility_retained": 0.6806
     },
     {
       "tier": "STANDARD",
       "lambda": 0.6,
-      "coverage": 0.9967,
-      "soft_violation_rate": 0.0033,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 40.05,
-      "flexibility_retained": 0.6012
+      "mean_safe_min": 42.34,
+      "flexibility_retained": 0.6391
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.65,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 39.74,
+      "flexibility_retained": 0.5978
     },
     {
       "tier": "STANDARD",
       "lambda": 0.7,
-      "coverage": 0.9983,
-      "soft_violation_rate": 0.0017,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 36.43,
-      "flexibility_retained": 0.5447
+      "mean_safe_min": 37.18,
+      "flexibility_retained": 0.5575
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.75,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 34.73,
+      "flexibility_retained": 0.5192
     },
     {
       "tier": "STANDARD",
@@ -463,8 +688,17 @@
       "coverage": 1.0,
       "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 32.94,
-      "flexibility_retained": 0.4903
+      "mean_safe_min": 32.33,
+      "flexibility_retained": 0.4813
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.85,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 30.07,
+      "flexibility_retained": 0.4454
     },
     {
       "tier": "STANDARD",
@@ -472,8 +706,17 @@
       "coverage": 1.0,
       "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 29.63,
-      "flexibility_retained": 0.44
+      "mean_safe_min": 27.88,
+      "flexibility_retained": 0.411
+    },
+    {
+      "tier": "STANDARD",
+      "lambda": 0.95,
+      "coverage": 1.0,
+      "soft_violation_rate": 0.0,
+      "hard_breach_rate": 0.0,
+      "mean_safe_min": 25.9,
+      "flexibility_retained": 0.3788
     },
     {
       "tier": "STANDARD",
@@ -481,8 +724,8 @@
       "coverage": 1.0,
       "soft_violation_rate": 0.0,
       "hard_breach_rate": 0.0,
-      "mean_safe_min": 26.52,
-      "flexibility_retained": 0.3934
+      "mean_safe_min": 25.0,
+      "flexibility_retained": 0.3552
     }
   ],
   "ood_thresholds": {

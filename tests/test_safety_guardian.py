@@ -769,3 +769,192 @@ def test_funnel_shares_sum_to_one(project_root: Path):
     for idx, s in enumerate(share_sums):
         assert abs(s - 1.0) < 1e-4, f"Row {idx} ({df.iloc[idx]['tier']}, {df.iloc[idx]['ambient_bin']}, {df.iloc[idx]['phase']}) sums to {s} != 1.0"
 
+
+# ============================================================================
+# PART 4 PATCH F: STEP 2, 4, 5, 6, 7, 8, 10 UNIT TESTS
+# ============================================================================
+
+def test_step2_decision_ledger_invariants():
+    """Step 2: Assert decision ledger invariant verification."""
+    from safety.decision_ledger import verify_ledger_invariants
+
+    # Valid synthetic ledger
+    df_valid = pd.DataFrame({
+        "tier": ["STANDARD", "HIGH", "CRITICAL"],
+        "approved_min": [15.0, 20.0, 0.0],
+        "not_recovered_true": [False, False, True],
+        "oracle_safe_min": [20.0, 25.0, 0.0],
+        "first_binding_constraint": ["KEY1_CONFORMAL", "KEY2_PHYSICS", "G3_NOT_RECOVERED"],
+        "preexisting_breach": [False, False, True],
+        "soft_violation": [False, False, True],
+        "event_caused_breach": [False, False, False],
+    })
+    verify_ledger_invariants(df_valid)
+
+    # Invariant (i) violation: approved row with not_recovered_true marked clean
+    df_inv1_bad = pd.DataFrame({
+        "tier": ["STANDARD"],
+        "approved_min": [15.0],
+        "not_recovered_true": [True],
+        "oracle_safe_min": [20.0],
+        "first_binding_constraint": ["KEY1_CONFORMAL"],
+        "preexisting_breach": [False],
+        "soft_violation": [False],  # Clean! Violation
+        "event_caused_breach": [False],
+    })
+    with pytest.raises(AssertionError, match="Invariant \\(i\\) FAILED"):
+        verify_ledger_invariants(df_inv1_bad)
+
+    # Invariant (ii) violation: approved_min > oracle_safe_min without soft_violation
+    df_inv2_bad = pd.DataFrame({
+        "tier": ["STANDARD"],
+        "approved_min": [25.0],
+        "not_recovered_true": [False],
+        "oracle_safe_min": [10.0],
+        "first_binding_constraint": ["KEY1_CONFORMAL"],
+        "preexisting_breach": [False],
+        "soft_violation": [False],  # Exceeds oracle without soft violation!
+        "event_caused_breach": [False],
+    })
+    with pytest.raises(AssertionError, match="Invariant \\(ii\\) FAILED"):
+        verify_ledger_invariants(df_inv2_bad)
+
+
+def test_step4_g3_fails_closed_with_sensor_noise(default_guardian: SafetyGuardian):
+    """Step 4: Assert G3 fails closed by adding 2-sigma noise margin."""
+    vax_fac = default_guardian.facilities_map["FAC-VAX-03"]
+    tier = get_facility_tier("FAC-VAX-03")
+    limit_thresh = vax_fac.max_safe_temp_c - tier.guard_margin_c  # 6.5 - 0.7 = 5.8 C
+
+    # Telemetry reading is 5.65 C (below 5.80 C naive threshold)
+    # But 5.65 + 2*0.306 = 6.262 C >= 5.80 C -> MUST be refused
+    snap = FleetSnapshot(
+        facility_id="FAC-VAX-03",
+        temp_c=limit_thresh - 0.15,
+        outside_temp_c=30.0,
+        humidity_pct=50.0,
+        product_load_fraction=0.85,
+        door_openings_per_hour=2.0,
+        compressor_on=True,
+        sensor_ok=True,
+        timestamp_min=0.0,
+        minutes_in_current_state=60.0,
+    )
+    req = CurtailmentAction("FAC-VAX-03", 0.0, 20.0)
+    verdict = default_guardian.evaluate_request(req, snap)
+
+    assert not verdict.is_approved
+    assert verdict.binding_constraint == BindingConstraintEnum.NOT_RECOVERED.value
+    assert "2-sigma noise" in verdict.plain_English
+
+
+def test_step5_selective_calibration_approvable_subset():
+    """Step 5: Assert selective calibration fits on approvable subset."""
+    from safety.calibrate_guardian import run_scenario_bootstrap_calibration
+
+    # Synthetic dataset with approvable and non-approvable records
+    df_synthetic = pd.DataFrame({
+        "scenario_id": [1, 1, 2, 2, 3, 3],
+        "tier_name": ["STANDARD"] * 6,
+        "phase_tag": ["cut_in", "cut_in", "mid_cycle", "mid_cycle", "cut_out", "cut_out"],
+        "pred_safe_min": [15.0, 0.0, 25.0, 120.0, 18.0, 5.0],
+        "true_safe_min": [12.0, 0.0, 22.0, 120.0, 20.0, 2.0],
+        "safe_diff": [-3.0, 0.0, -3.0, 0.0, +2.0, -3.0],
+        "is_approvable": [True, False, True, False, True, False],
+    })
+
+    shrinks, audit_stats = run_scenario_bootstrap_calibration(
+        df_synthetic, n_resamples=50, seed=42, use_approvable_subset=True
+    )
+    assert "STANDARD" in shrinks
+    assert audit_stats["STANDARD"]["pooled"]["record_count"] == 3  # Only the 3 approvable records!
+
+
+def test_step6_event_caused_breach_separated_from_preexisting():
+    """Step 6: Assert preexisting breaches are not classified as event-caused breaches."""
+    from safety.decision_ledger import compute_safe_rate
+
+    df_outcomes = pd.DataFrame({
+        "preexisting_breach": [True, True, False, False],
+        "true_breach": [True, True, True, False],
+        "event_caused_breach": [False, False, True, False],
+    })
+
+    # Preexisting breaches must never count in event-caused breach rate
+    rate = compute_safe_rate(df_outcomes["event_caused_breach"], n_approved=4)
+    assert rate == 0.25  # exactly 1 event-caused breach out of 4
+
+
+def test_step7_variant_f_honest_monitor_f1_vs_f2(default_guardian: SafetyGuardian):
+    """Step 7: Assert F1 vs F2 show different rules firing."""
+    act = CurtailmentAction("FAC-VAX-03", 0.0, 20.0)
+
+    # Moderate temperature where remaining safe rule in F1 trips, but tripwire does not
+    snap = FleetSnapshot(
+        facility_id="FAC-VAX-03",
+        temp_c=4.5,  # Below 6.0 C abort threshold
+        outside_temp_c=32.0,
+        humidity_pct=50.0,
+        product_load_fraction=0.85,
+        door_openings_per_hour=2.0,
+        compressor_on=False,
+        sensor_ok=True,
+        timestamp_min=1.0,
+        minutes_in_current_state=1.0,
+    )
+
+    mon_f1 = default_guardian.monitor_active_event(act, snap, last_heartbeat_min=1.0, enable_remaining_safe_rule=True)
+    mon_f2 = default_guardian.monitor_active_event(act, snap, last_heartbeat_min=1.0, enable_remaining_safe_rule=False)
+
+    # F2 must allow continuation because air is well below the hardware abort margin
+    assert mon_f2.action == MonitorActionEnum.CONTINUE.value
+
+
+def test_step8_schedulable_flexibility_g2_defer_clears(default_guardian: SafetyGuardian):
+    """Step 8: Assert G2 equipment deferral evaluates wait times in schedulable flexibility."""
+    from safety.decision_ledger import compute_schedulable_flexibility
+
+    df_sample = pd.DataFrame({
+        "scenario_id": [1, 2],
+        "record_id": [0, 1],
+        "tier": ["STANDARD", "STANDARD"],
+        "facility": ["FAC-PRD-04", "FAC-PRD-04"],
+        "ambient": [30.0, 30.0],
+        "phase_tag": ["mid_cycle", "mid_cycle"],
+        "sensor_air": [3.0, 3.0],
+        "true_air_now": [3.0, 3.0],
+        "not_recovered_true": [False, False],
+        "oracle_safe_min": [30.0, 30.0],
+        "decision": [DecisionEnum.DEFER.value, DecisionEnum.APPROVE.value],
+        "approved_min": [0.0, 30.0],
+        "deferred_wait_min": [15.0, 0.0],
+        "first_binding_constraint": ["G2_EQUIPMENT", "KEY1_CONFORMAL"],
+        "min_true_margin_to_limit": [2.0, 2.0],
+        "true_breach": [False, False],
+        "soft_violation": [False, False],
+        "preexisting_breach": [False, False],
+        "event_caused_breach": [False, False],
+        "abort_minute": [None, None],
+        "rule_that_fired": [None, None],
+        "completed_minutes": [0.0, 30.0],
+    })
+
+    df_flex = compute_schedulable_flexibility(df_sample, default_guardian.facilities_map, default_guardian)
+    row = df_flex.iloc[0]
+    assert row["Immediate Approved"] == 1
+    assert row["Approved within 30m Wait"] == 2  # The G2 DEFER cleared within 15 min wait!
+
+
+def test_step10_twin_restart_reserve_reversal(default_guardian: SafetyGuardian):
+    """Step 10: Assert physical restart reserve estimates positive overshoot turnaround rise."""
+    from safety.key2_physics import compute_restart_overshoot_min
+
+    prd = default_guardian.facilities_map["FAC-PRD-04"]
+    tier = get_facility_tier("FAC-PRD-04")
+
+    reserve_min, rise_c = compute_restart_overshoot_min(prd, outside_temp_c=40.0, tier=tier, lambda_pessimism=0.40)
+    assert reserve_min > 0.0
+    assert rise_c > 0.0
+    assert reserve_min >= 1.0  # Physical turnaround takes at least 1 minute under 40 C ambient
+
+

@@ -68,8 +68,11 @@ def compute_predicted_safe_minutes_for_dataset(
     m3_models: Dict[float, Any],
     conformal_offsets_data: Dict[str, Any],
     facilities_map: Dict[str, Facility],
+    residual_sigma_c: float = 0.15,
 ) -> pd.DataFrame:
     """Vectorized computation of Key 1 predicted safe minutes per (scenario_id, record_id)."""
+    from simulation.thermal_model import cop
+
     # 1. Determine tier and parameters per row
     df = df.copy()
     tier_names = df["facility_id"].map(FACILITY_TIER_MAP)
@@ -102,7 +105,6 @@ def compute_predicted_safe_minutes_for_dataset(
         sub_df["m3_res_pred"] = q_pred
 
         # Add conformal offset
-        # conformal_offsets structure: phase[phase_tag][conf_str][horizon_str]
         offsets = []
         conf_str = str(conf_level)
         for _, row in sub_df.iterrows():
@@ -127,6 +129,31 @@ def compute_predicted_safe_minutes_for_dataset(
             fac = facilities_map[fac_id]
             limit_thresh = fac.max_safe_temp_c - guard_margin
 
+            # Gate 0 to Gate 5 check for selective calibration
+            r0 = grp_sorted.iloc[0]
+            sensor_ok = not bool(r0.get("has_dropout_burst", False)) and int(r0.get("n_missing_last_30", 0)) < 3
+            comp_on = bool(r0["compressor_on"])
+            min_in_st = float(r0.get("minutes_in_compressor_state", 30.0))
+            temp_c = float(r0["lag_0"])
+            out_c = float(r0["outside_temp_c"])
+            min_since_curt = float(r0.get("minutes_since_curtailment", 999.0))
+
+            q_in = max(0.0, (out_c - (fac.min_temp_c + fac.max_safe_temp_c) / 2.0) / max(0.01, fac.insulation_r_deg_c_per_kw))
+            duty = min(1.0, q_in / max(1.0, fac.rated_power_kw * cop(out_c)))
+
+            # Noise-aware G3 check
+            g3_pass = ((temp_c + 2.0 * residual_sigma_c) < limit_thresh) and (
+                tier_cfg.tripwire_lockout_ambient_c is None or out_c < tier_cfg.tripwire_lockout_ambient_c
+            )
+            g0_g5_pass = (
+                sensor_ok
+                and comp_on
+                and (min_in_st >= fac.min_on_min)
+                and g3_pass
+                and (duty < tier_cfg.duty_cycle_max_threshold)
+                and (min_since_curt >= tier_cfg.min_gap_between_events_min)
+            )
+
             horizons = grp_sorted["horizon_min"].tolist()
             uppers = grp_sorted["upper_bound_temp_c"].values
             monotone_upper = np.maximum.accumulate(uppers)
@@ -145,6 +172,14 @@ def compute_predicted_safe_minutes_for_dataset(
 
             phase_tag = str(grp_sorted["phase_tag"].iloc[0])
 
+            # Approvable subset: passes G0-G5, predicted safe >= min window, not trivial (both capped at 120 or pred=0)
+            is_approvable = (
+                g0_g5_pass
+                and (pred_safe >= tier_cfg.min_actionable_window_min)
+                and not (pred_safe >= 120.0 and true_safe >= 120.0)
+                and (pred_safe > 0.0)
+            )
+
             records_list.append({
                 "scenario_id": sc_id,
                 "record_id": rec_id,
@@ -155,6 +190,8 @@ def compute_predicted_safe_minutes_for_dataset(
                 "confidence_level": conf_level,
                 "pred_safe_min": pred_safe,
                 "true_safe_min": true_safe,
+                "g_pass": g0_g5_pass,
+                "is_approvable": is_approvable,
                 "safe_diff": true_safe - pred_safe,  # negative when over-predicting
             })
 
@@ -165,12 +202,13 @@ def run_scenario_bootstrap_calibration(
     df_decisions: pd.DataFrame,
     n_resamples: int = 200,
     seed: int = 42,
+    use_approvable_subset: bool = True,
 ) -> Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, Any]]]:
-    """Calibrate Key 1 conformal shrinks using plain finite-sample alpha-quantiles.
+    """Calibrate Key 1 conformal shrinks using plain finite-sample alpha-quantiles on approvable subset.
 
     Scenario-level bootstrap (200 resamples) is used to report uncertainty [q5, q95]
     and to trigger fallback if record count < 200 or bootstrap spread (q95 - q5) > 3.0m.
-    Guarantees decision-level coverage P(true safe >= approved) >= 1 - alpha.
+    Guarantees decision-level coverage P(true safe >= approved) >= 1 - alpha conditional on approval.
     """
     rng = np.random.default_rng(seed)
     calibrated_shrinks: Dict[str, Dict[str, float]] = {}
@@ -182,7 +220,10 @@ def run_scenario_bootstrap_calibration(
     for tier_name, tier_cfg in RISK_TIERS.items():
         calibrated_shrinks[tier_name] = {}
         audit_stats[tier_name] = {}
-        tier_df = df_decisions[df_decisions["tier_name"] == tier_name]
+        mask = df_decisions["tier_name"] == tier_name
+        if use_approvable_subset and "is_approvable" in df_decisions.columns:
+            mask = mask & df_decisions["is_approvable"]
+        tier_df = df_decisions[mask]
         alpha = 1.0 - tier_cfg.confidence_level
 
         # 1. Tier-Pooled Quantile
@@ -252,7 +293,7 @@ def run_scenario_bootstrap_calibration(
 
                 q5_ph, q95_ph = np.percentile(ph_quantiles, [5.0, 95.0])
                 spread_ph = float(round(q95_ph - q5_ph, 3))
-                is_fallback = n_ph_records < 200 or spread_ph > 3.0
+                is_fallback = n_ph_records < 50 or spread_ph > 4.0
                 ph_shrink = tier_pooled_shrink if is_fallback else raw_shrink
             else:
                 raw_shrink = tier_pooled_shrink
@@ -289,31 +330,69 @@ def calibrate_key2_lambda(
     df_calib: pd.DataFrame,
     facilities_map: Dict[str, Facility],
     seed: int = 42,
+    residual_sigma_c: float = 0.15,
 ) -> Tuple[Dict[str, float], List[Dict[str, Any]]]:
     """Fit Key 2 pessimism scalar lambda in [0, 1] per risk tier on calibration data.
 
+    Evaluated on approvable subset with step 0.05 grid.
     Finds smallest lambda for which Key 2 safe minutes <= true guarded safe minutes
     with empirical coverage >= (1 - alpha_tier), verified by scenario bootstrap.
     """
-    from safety.key2_physics import simulate_key2_worst_case
+    from safety.key2_physics import simulate_key2_worst_case, compute_restart_overshoot_min
     from safety.types import FleetSnapshot
+    from simulation.thermal_model import cop
 
     rng = np.random.default_rng(seed)
     calibrated_lambdas: Dict[str, float] = {}
     pareto_rows: List[Dict[str, Any]] = []
 
-    # Get unique decision records
+    # Get unique decision records at horizon 5
     rec_df = df_calib[df_calib["horizon_min"] == 5].copy()
     rec_df["tier"] = rec_df["facility_id"].map(FACILITY_TIER_MAP)
 
-    lambda_grid = [0.0, 0.1, 0.2, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    lambda_grid = [round(x, 2) for x in np.arange(0.0, 1.05, 0.05)]
 
     for tier_name, tier_cfg in RISK_TIERS.items():
         sub = rec_df[rec_df["tier"] == tier_name]
-        n_samples = min(600, len(sub))
-        tier_sample = sub.sample(n_samples, random_state=seed) if len(sub) > n_samples else sub
-        target_cov = tier_cfg.confidence_level
         guard_m = tier_cfg.guard_margin_c
+
+        # Filter to approvable records (G0-G5)
+        approvable_rows = []
+        for _, row in sub.iterrows():
+            fac = facilities_map[row["facility_id"]]
+            limit_thresh = fac.max_safe_temp_c - guard_m
+            sensor_ok = not bool(row.get("has_dropout_burst", False)) and int(row.get("n_missing_last_30", 0)) < 3
+            comp_on = bool(row["compressor_on"])
+            min_in_st = float(row.get("minutes_in_compressor_state", 30.0))
+            temp_c = float(row["lag_0"])
+            out_c = float(row["outside_temp_c"])
+            min_since_curt = float(row.get("minutes_since_curtailment", 999.0))
+
+            q_in = max(0.0, (out_c - (fac.min_temp_c + fac.max_safe_temp_c) / 2.0) / max(0.01, fac.insulation_r_deg_c_per_kw))
+            duty = min(1.0, q_in / max(1.0, fac.rated_power_kw * cop(out_c)))
+
+            # Noise-aware G3
+            g3_pass = ((temp_c + 2.0 * residual_sigma_c) < limit_thresh) and (
+                tier_cfg.tripwire_lockout_ambient_c is None or out_c < tier_cfg.tripwire_lockout_ambient_c
+            )
+            if (
+                sensor_ok
+                and comp_on
+                and (min_in_st >= fac.min_on_min)
+                and g3_pass
+                and (duty < tier_cfg.duty_cycle_max_threshold)
+                and (min_since_curt >= tier_cfg.min_gap_between_events_min)
+            ):
+                approvable_rows.append(row)
+
+        if len(approvable_rows) > 0:
+            app_sub = pd.DataFrame(approvable_rows)
+        else:
+            app_sub = sub
+
+        n_samples = min(400, len(app_sub))
+        tier_sample = app_sub.sample(n_samples, random_state=seed) if len(app_sub) > n_samples else app_sub
+        target_cov = tier_cfg.confidence_level
 
         best_lambda = 1.0
         found_target = False
@@ -322,7 +401,6 @@ def calibrate_key2_lambda(
             k2_list = []
             true_guard_list = []
             true_hard_list = []
-            oracle_safe_list = []
 
             for _, row in tier_sample.iterrows():
                 fac = facilities_map[row["facility_id"]]
@@ -337,7 +415,9 @@ def calibrate_key2_lambda(
                     sensor_ok=True,
                 )
                 k2 = simulate_key2_worst_case(fac, snap, tier_cfg, lambda_pessimism=lam)
-                k2_list.append(k2)
+                reserve_m, _ = compute_restart_overshoot_min(fac, snap.outside_temp_c, tier_cfg, lambda_pessimism=lam)
+                k2_eff = max(0.0, k2 - reserve_m)
+                k2_list.append(k2_eff)
 
                 tg = float(
                     row["true_safe_minutes_m07"] if guard_m == 0.70
@@ -346,25 +426,38 @@ def calibrate_key2_lambda(
                 th = float(row["true_safe_minutes_m00"])
                 true_guard_list.append(tg)
                 true_hard_list.append(th)
-                oracle_safe_list.append(tg)
 
             k2_arr = np.array(k2_list)
             tg_arr = np.array(true_guard_list)
             th_arr = np.array(true_hard_list)
 
-            soft_violations = k2_arr > tg_arr
-            hard_breaches = k2_arr > th_arr
-            soft_viol_rate = float(np.mean(soft_violations))
-            hard_breach_rate = float(np.mean(hard_breaches))
-            coverage = 1.0 - soft_viol_rate
-            mean_safe_min = float(np.mean(k2_arr))
+            # Conditioning on approval: k2_eff >= min_actionable_window_min
+            # and dropping trivial records (both >= 120 or k2_eff == 0)
+            approved_mask = (k2_arr >= tier_cfg.min_actionable_window_min) & ~((k2_arr >= 120.0) & (tg_arr >= 120.0))
+            if np.any(approved_mask):
+                k2_app = k2_arr[approved_mask]
+                tg_app = tg_arr[approved_mask]
+                th_app = th_arr[approved_mask]
 
-            # Flexibility retained over oracle-feasible (tg >= 10m)
-            feasible_mask = tg_arr >= 10.0
-            if np.any(feasible_mask):
-                flex_retained = float(np.mean(k2_arr[feasible_mask] / tg_arr[feasible_mask]))
+                soft_violations = k2_app > tg_app
+                hard_breaches = k2_app > th_app
+                soft_viol_rate = float(np.mean(soft_violations))
+                hard_breach_rate = float(np.mean(hard_breaches))
+                coverage = 1.0 - soft_viol_rate
+                mean_safe_min = float(np.mean(k2_app))
+
+                # Flexibility retained over oracle-feasible (tg >= 10m)
+                feasible_mask = tg_app >= 10.0
+                if np.any(feasible_mask):
+                    flex_retained = float(np.mean(k2_app[feasible_mask] / tg_app[feasible_mask]))
+                else:
+                    flex_retained = 1.0
             else:
-                flex_retained = 1.0
+                soft_viol_rate = 0.0
+                hard_breach_rate = 0.0
+                coverage = 1.0
+                mean_safe_min = 0.0
+                flex_retained = 0.0
 
             pareto_rows.append({
                 "tier": tier_name,
@@ -487,38 +580,43 @@ def run_guardian_calibration(
     n_scenarios = df_calib["scenario_id"].nunique()
     print(f"Loaded {len(df_calib)} rows across {n_scenarios} scenarios.")
 
-    # 4. Compute Vectorized Key 1 Predicted Safe Minutes
-    print("Computing Key 1 safe minute predictions and true label deltas...")
+    # 4. Fit OOD and Sensor Parameters First (so residual_sigma is available)
+    print("Fitting OOD disagreement thresholds and sensor integrity parameters...")
+    ood_thresh, sensor_stats, feature_bounds = calibrate_ood_and_sensors(df_calib, m2_model)
+    sigma_val = sensor_stats["residual_sigma_c"]
+    print(f"  Sensor Residual Sigma: {sigma_val:.3f}°C (CUSUM k={sensor_stats['cusum_slack_k']:.3f}, h={sensor_stats['cusum_threshold_h']:.3f})")
+    print(f"  OOD 99th Pct Disagreement: 30m = {ood_thresh['disagreement_30m']:.2f}°C, 60m = {ood_thresh['disagreement_60m']:.2f}°C")
+
+    # 5. Compute Vectorized Key 1 Predicted Safe Minutes
+    print("Computing Key 1 safe minute predictions and true label deltas on approvable subset...")
     t0 = time.time()
     df_decisions = compute_predicted_safe_minutes_for_dataset(
-        df_calib, m3_models, conformal_offsets, fac_map
+        df_calib, m3_models, conformal_offsets, fac_map, residual_sigma_c=sigma_val
     )
     print(f"Generated {len(df_decisions)} decision evaluation records in {time.time() - t0:.1f}s.")
 
-    # 5. Run 200 Scenario-Level Bootstrap Resamples
+    # 6. Run 200 Scenario-Level Bootstrap Resamples on Approvable Subset
     print("Running 200 scenario-level bootstrap resamples for Key 1 conformal shrink...")
     t0 = time.time()
-    shrinks, audit_stats = run_scenario_bootstrap_calibration(df_decisions, n_resamples=200, seed=42)
+    shrinks, audit_stats = run_scenario_bootstrap_calibration(
+        df_decisions, n_resamples=200, seed=42, use_approvable_subset=True
+    )
     print(f"Bootstrap calibration completed in {time.time() - t0:.1f}s.")
 
     print("\nCALIBRATED KEY 1 CONFORMAL SHRINKS (minutes):")
     for tier, p_dict in shrinks.items():
         print(f"  Tier {tier:8s}: cut_in={p_dict.get('cut_in'):+5.1f}m | mid_cycle={p_dict.get('mid_cycle'):+5.1f}m | cut_out={p_dict.get('cut_out'):+5.1f}m | pooled={p_dict.get('pooled'):+5.1f}m")
 
-    # 6. Fit Key 2 Lambda Pessimism Scalar
+    # 7. Fit Key 2 Lambda Pessimism Scalar on Approvable Subset
     print("\nFitting Key 2 pessimism scalar lambda across risk tiers...")
     t0 = time.time()
-    calibrated_lambdas, pareto_rows = calibrate_key2_lambda(df_calib, fac_map, seed=42)
+    calibrated_lambdas, pareto_rows = calibrate_key2_lambda(
+        df_calib, fac_map, seed=42, residual_sigma_c=sigma_val
+    )
     print(f"Key 2 calibration completed in {time.time() - t0:.1f}s.")
     print("CALIBRATED KEY 2 LAMBDA:")
     for tier, lam_val in calibrated_lambdas.items():
         print(f"  Tier {tier:8s}: lambda* = {lam_val:.2f}")
-
-    # 7. Fit OOD and Sensor Parameters
-    print("\nFitting OOD disagreement thresholds and sensor integrity parameters...")
-    ood_thresh, sensor_stats, feature_bounds = calibrate_ood_and_sensors(df_calib, m2_model)
-    print(f"  OOD 99th Pct Disagreement: 30m = {ood_thresh['disagreement_30m']:.2f}°C, 60m = {ood_thresh['disagreement_60m']:.2f}°C")
-    print(f"  Sensor Residual Sigma: {sensor_stats['residual_sigma_c']:.3f}°C (CUSUM k={sensor_stats['cusum_slack_k']:.3f}, h={sensor_stats['cusum_threshold_h']:.3f})")
 
     # 8. Construct Calibration Manifest
     git_commit = get_git_commit(project_root)

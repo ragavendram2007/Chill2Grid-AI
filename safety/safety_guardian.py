@@ -99,8 +99,18 @@ class SafetyGuardian:
 
         # 4. Components
         self.debt_ledger = ThermalDebtLedger()
+        residual_sigma = 0.15
+        if self.calib_path.is_file():
+            try:
+                with open(self.calib_path, "r") as f:
+                    calib_dict = json.load(f)
+                residual_sigma = float(calib_dict.get("sensor_integrity", {}).get("residual_sigma_c", 0.15))
+            except Exception:
+                residual_sigma = 0.15
+        self.residual_sigma_c = residual_sigma
+
         self.sensor_checkers: Dict[str, SensorIntegrityChecker] = {
-            f.id: SensorIntegrityChecker() for f in self.facilities
+            f.id: SensorIntegrityChecker(residual_sigma_c=self.residual_sigma_c) for f in self.facilities
         }
         ood_file = self.calib_path if self.calib_path.is_file() else (self.models_dir / "metadata.json")
         self.ood_guard = OODGuard(metadata_path=ood_file)
@@ -318,18 +328,21 @@ class SafetyGuardian:
             )
 
         # ---------------------------------------------------------------------
-        # GATE 3: Thermal State & Recovery Envelope
+        # GATE 3: Thermal State & Recovery Envelope (Step 4: G3 Fails Closed)
         # ---------------------------------------------------------------------
         limit_threshold = facility.max_safe_temp_c - tier.guard_margin_c
 
-        if snapshot.temp_c >= limit_threshold:
+        # Noise-aware conservative G3 check (Step 4: G3 FAILS CLOSED)
+        # Compare sensor reading + 2 * sigma with tier guard line
+        noise_margin = 2.0 * self.residual_sigma_c
+        if (snapshot.temp_c + noise_margin) >= limit_threshold:
             retry_hint = self._compute_retry_hint(facility, snapshot, tier)
             return self._refuse_with_audit(
                 request,
                 snapshot,
                 BindingConstraintEnum.NOT_RECOVERED.value,
                 ["NOT_RECOVERED_THERMAL_HEADROOM"],
-                f"REFUSE: Current temperature ({snapshot.temp_c:.2f}°C) is above guard threshold ({limit_threshold:.2f}°C). Re-chilling required.",
+                f"REFUSE: Current temperature with 2-sigma noise ({snapshot.temp_c:.2f} + {noise_margin:.2f} = {snapshot.temp_c + noise_margin:.2f}°C) is above guard threshold ({limit_threshold:.2f}°C). Re-chilling required.",
                 audit_id,
                 retry_hint=retry_hint,
             )
@@ -593,6 +606,7 @@ class SafetyGuardian:
         active_event: CurtailmentAction,
         snapshot: FleetSnapshot,
         last_heartbeat_min: float,
+        enable_remaining_safe_rule: bool = True,
     ) -> MonitorVerdict:
         """Runtime monitor executing every minute during active curtailment leases.
 
@@ -649,28 +663,31 @@ class SafetyGuardian:
             )
 
         # 4. Fresh Two-Key Remaining Safe Minutes Check
-        fresh_key2 = simulate_key2_worst_case(facility, snapshot, tier)
-        fresh_key1 = self._predict_key1_safe_window(facility, snapshot, tier, "mid_cycle")
-        remaining_safe = max(0.0, min(fresh_key1, fresh_key2) - tier.restart_reserve_min)
+        if enable_remaining_safe_rule:
+            fresh_key2 = simulate_key2_worst_case(facility, snapshot, tier)
+            fresh_key1 = self._predict_key1_safe_window(facility, snapshot, tier, "mid_cycle")
+            remaining_safe = max(0.0, min(fresh_key1, fresh_key2) - tier.restart_reserve_min)
 
-        if remaining_safe < remaining_event:
-            adjusted = elapsed + remaining_safe
-            if remaining_safe <= 3.0:
+            if remaining_safe < remaining_event:
+                adjusted = elapsed + remaining_safe
+                if remaining_safe <= 3.0:
+                    return MonitorVerdict(
+                        action=MonitorActionEnum.ABORT_NOW.value,
+                        reason=f"ABORT: Remaining safe minutes ({remaining_safe:.1f}m) exhausted before planned event end.",
+                        remaining_safe_min=remaining_safe,
+                        current_temp_c=snapshot.temp_c,
+                        adjusted_duration_min=adjusted,
+                        emergency_override=True,
+                    )
                 return MonitorVerdict(
-                    action=MonitorActionEnum.ABORT_NOW.value,
-                    reason=f"ABORT: Remaining safe minutes ({remaining_safe:.1f}m) exhausted before planned event end.",
+                    action=MonitorActionEnum.SHORTEN_NOW.value,
+                    reason=f"SHORTEN: Remaining safe headroom ({remaining_safe:.1f}m) requires shortening event to {adjusted:.0f}m.",
                     remaining_safe_min=remaining_safe,
                     current_temp_c=snapshot.temp_c,
                     adjusted_duration_min=adjusted,
-                    emergency_override=True,
                 )
-            return MonitorVerdict(
-                action=MonitorActionEnum.SHORTEN_NOW.value,
-                reason=f"SHORTEN: Remaining safe headroom ({remaining_safe:.1f}m) requires shortening event to {adjusted:.0f}m.",
-                remaining_safe_min=remaining_safe,
-                current_temp_c=snapshot.temp_c,
-                adjusted_duration_min=adjusted,
-            )
+        else:
+            remaining_safe = remaining_event
 
         return MonitorVerdict(
             action=MonitorActionEnum.CONTINUE.value,
@@ -1034,9 +1051,12 @@ def monitor_active_event(
     active_event: CurtailmentAction,
     snapshot: FleetSnapshot,
     last_heartbeat_min: float,
+    enable_remaining_safe_rule: bool = True,
 ) -> MonitorVerdict:
     """Runtime monitor for active curtailment leases."""
-    return get_default_guardian().monitor_active_event(active_event, snapshot, last_heartbeat_min)
+    return get_default_guardian().monitor_active_event(
+        active_event, snapshot, last_heartbeat_min, enable_remaining_safe_rule=enable_remaining_safe_rule
+    )
 
 
 def lookup_max_curtail_min(

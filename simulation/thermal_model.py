@@ -453,6 +453,7 @@ def simulate_pair(
         # Zero curtailment: twin runs are identical
         event_df = baseline_df.copy()
         summary = {
+            "detected_cycle_min": 0,
             "energy_saved_during_event_kwh": 0.0,
             "recovery_extra_kwh": 0.0,
             "net_kwh_saved": 0.0,
@@ -593,6 +594,7 @@ def simulate_pair(
     event_df = first_event_df if first_event_df is not None else baseline_df
 
     summary = {
+        "detected_cycle_min": cycle_len,
         "energy_saved_during_event_kwh": round(saved_during_event_kwh, 4),
         "recovery_extra_kwh": round(recovery_extra_kwh, 4),
         "net_kwh_saved": round(net_kwh_saved, 4),

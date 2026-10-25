@@ -47,7 +47,7 @@ TIER_CRITICAL = RiskTierConfig(
     duty_cycle_max_threshold=0.90,
     max_recovery_min=180.0,
     tripwire_lockout_ambient_c=35.0,  # Prohibit curtailment when outdoor temp >= 35 C
-    calibrated_lambda=0.80,
+    calibrated_lambda=0.45,
     restart_lag_min=3.0,
 )
 
@@ -83,7 +83,7 @@ TIER_STANDARD = RiskTierConfig(
     duty_cycle_max_threshold=0.90,
     max_recovery_min=180.0,
     tripwire_lockout_ambient_c=None,
-    calibrated_lambda=0.35,
+    calibrated_lambda=0.40,
     restart_lag_min=2.0,
 )
 

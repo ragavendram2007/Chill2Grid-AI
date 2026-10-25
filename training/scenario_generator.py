@@ -14,9 +14,10 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import joblib
 import numpy as np
 import pandas as pd
@@ -73,6 +74,28 @@ FORBIDDEN_FEATURES: set[str] = {
     "true_temp_c",
     "residual_c",
     "true_minutes_to_limit",
+    "true_safe_minutes",
+    "true_safe_minutes_0",
+    "true_safe_minutes_m00",
+    "true_safe_minutes_m02",
+    "true_safe_minutes_m03",
+    "true_safe_minutes_m05",
+    "true_safe_minutes_m07",
+    "true_safe_minutes_0.0",
+    "true_safe_minutes_0.2",
+    "true_safe_minutes_0.3",
+    "true_safe_minutes_0.5",
+    "true_safe_minutes_0.7",
+    "true_safe_minutes_0_0",
+    "true_safe_minutes_0_2",
+    "true_safe_minutes_0_3",
+    "true_safe_minutes_0_5",
+    "true_safe_minutes_0_7",
+    "true_minutes_to_limit_m00",
+    "true_minutes_to_limit_m02",
+    "true_minutes_to_limit_m03",
+    "true_minutes_to_limit_m05",
+    "true_minutes_to_limit_m07",
     "scenario_id",
     "record_id",
     "facility_id",
@@ -345,6 +368,7 @@ def generate_single_scenario(
     nominal_facility: Facility,
     seed: int,
     records_per_scenario: int = 30,
+    severe_adversarial: bool = False,
 ) -> List[Dict[str, object]]:
     """Simulate a single 480-minute scenario in the true world and extract branch records.
 
@@ -353,6 +377,7 @@ def generate_single_scenario(
         nominal_facility: Calibrated nominal Facility instance.
         seed: Unique random seed for repeatability.
         records_per_scenario: Number of 'now' decision moments to sample (default 30).
+        severe_adversarial: If True, forces extreme heat (38-44 C) and heavy stress.
 
     Returns:
         List of long-format row dictionaries.
@@ -361,12 +386,20 @@ def generate_single_scenario(
     rng = np.random.default_rng(seed)
 
     # 1. Randomize operational & weather boundary conditions
-    outside_base_c = float(rng.uniform(18.0, 44.0))
-    swing = float(rng.uniform(3.0, 6.0))
-    humidity_pct = float(rng.uniform(30.0, 90.0))
-    product_load_fraction = float(rng.uniform(0.30, 1.0))
-    door_rate = float(rng.uniform(0.0, 12.0))
-    sensor_noise_std = float(rng.uniform(0.05, 0.20))
+    if severe_adversarial:
+        outside_base_c = float(rng.uniform(38.0, 44.0))
+        swing = float(rng.uniform(3.0, 5.0))
+        humidity_pct = float(rng.uniform(50.0, 90.0))
+        product_load_fraction = float(rng.uniform(0.70, 1.0))
+        door_rate = float(rng.uniform(6.0, 12.0))
+        sensor_noise_std = float(rng.uniform(0.08, 0.20))
+    else:
+        outside_base_c = float(rng.uniform(18.0, 44.0))
+        swing = float(rng.uniform(3.0, 6.0))
+        humidity_pct = float(rng.uniform(30.0, 90.0))
+        product_load_fraction = float(rng.uniform(0.30, 1.0))
+        door_rate = float(rng.uniform(0.0, 12.0))
+        sensor_noise_std = float(rng.uniform(0.05, 0.20))
 
     # Daily outdoor temperature profile over 480 minutes
     outside_profile = [
@@ -383,14 +416,14 @@ def generate_single_scenario(
 
     # Past curtailments (0 to 2 historical events between min 60 and 300)
     past_curtailments: List[CurtailmentAction] = []
-    n_past = int(rng.integers(0, 3))
+    n_past = int(rng.integers(1, 3)) if severe_adversarial else int(rng.integers(0, 3))
     if n_past > 0:
         c1_start = int(rng.integers(60, 180))
-        c1_dur = int(rng.integers(10, 45))
+        c1_dur = int(rng.integers(15, 45))
         past_curtailments.append(CurtailmentAction(nominal_facility.id, c1_start, c1_dur))
         if n_past == 2:
             c2_start = int(rng.integers(c1_start + c1_dur + 20, 300))
-            c2_dur = int(rng.integers(10, 45))
+            c2_dur = int(rng.integers(15, 45))
             past_curtailments.append(CurtailmentAction(nominal_facility.id, c2_start, c2_dur))
 
     # 2. Perturb facility to create the 'True Physical World'
@@ -595,18 +628,6 @@ def generate_single_scenario(
             initial_minutes_in_state=0,
         )
 
-        # Ground truth limit & censoring checks
-        breached_true = true_branch_df["air_temp_c"] >= nominal_facility.max_safe_temp_c
-        if true_branch_df["air_temp_c"].iloc[0] >= nominal_facility.max_safe_temp_c:
-            true_min_to_limit = 0.0
-        elif breached_true.any():
-            true_min_to_limit = float(true_branch_df.loc[breached_true, "minute"].iloc[0])
-        else:
-            true_min_to_limit = 120.0
-
-        is_right_censored = bool(true_min_to_limit >= 120.0)
-        is_left_censored = bool(true_min_to_limit <= 0.0)
-
         # C. Compute physics model prediction from nominal beliefs
         physics_state = FacilityState(
             facility_id=nominal_facility.id,
@@ -633,13 +654,50 @@ def generate_single_scenario(
             initial_minutes_in_state=0,
         )
 
-        breached_phys = physics_branch_df["air_temp_c"] >= nominal_facility.max_safe_temp_c
-        if physics_branch_df["air_temp_c"].iloc[0] >= nominal_facility.max_safe_temp_c:
-            physics_min_to_limit = 0.0
-        elif breached_phys.any():
-            physics_min_to_limit = float(physics_branch_df.loc[breached_phys, "minute"].iloc[0])
-        else:
-            physics_min_to_limit = 120.0
+        # Ground truth limit & censoring checks across guard margins (0.0, 0.2, 0.3, 0.5, 0.7 C)
+        limit_labels: Dict[str, float] = {}
+        for m_val in (0.0, 0.2, 0.3, 0.5, 0.7):
+            m_tag = f"m{int(round(m_val * 10)):02d}"  # m00, m02, m03, m05, m07
+            thresh = nominal_facility.max_safe_temp_c - m_val
+
+            # Ground truth breach time
+            b_true = true_branch_df["air_temp_c"] >= thresh
+            if true_branch_df["air_temp_c"].iloc[0] >= thresh:
+                t_min = 0.0
+            elif b_true.any():
+                t_min = float(true_branch_df.loc[b_true, "minute"].iloc[0])
+            else:
+                t_min = 120.0
+            limit_labels[f"true_minutes_to_limit_{m_tag}"] = t_min
+            limit_labels[f"true_safe_minutes_{m_tag}"] = t_min
+            limit_labels[f"true_safe_minutes_{m_val}"] = t_min
+            limit_labels[f"true_safe_minutes_{str(m_val).replace('.', '_')}"] = t_min
+            if m_val == 0.0:
+                limit_labels["true_minutes_to_limit"] = t_min
+                limit_labels["true_safe_minutes"] = t_min
+                limit_labels["true_safe_minutes_0"] = t_min
+
+            # Physics prediction breach time
+            b_phys = physics_branch_df["air_temp_c"] >= thresh
+            if physics_branch_df["air_temp_c"].iloc[0] >= thresh:
+                p_min = 0.0
+            elif b_phys.any():
+                p_min = float(physics_branch_df.loc[b_phys, "minute"].iloc[0])
+            else:
+                p_min = 120.0
+            limit_labels[f"physics_minutes_to_limit_{m_tag}"] = p_min
+            limit_labels[f"physics_safe_minutes_{m_tag}"] = p_min
+            limit_labels[f"physics_safe_minutes_{m_val}"] = p_min
+            limit_labels[f"physics_safe_minutes_{str(m_val).replace('.', '_')}"] = p_min
+            if m_val == 0.0:
+                limit_labels["physics_minutes_to_limit"] = p_min
+                limit_labels["physics_safe_minutes"] = p_min
+                limit_labels["physics_safe_minutes_0"] = p_min
+
+        true_min_to_limit = limit_labels["true_minutes_to_limit"]
+        physics_min_to_limit = limit_labels["physics_minutes_to_limit"]
+        is_right_censored = bool(true_min_to_limit >= 120.0)
+        is_left_censored = bool(true_min_to_limit <= 0.0)
 
         # D. Assemble long-format records across all evaluation horizons
         for h in FORECAST_HORIZONS:
@@ -664,7 +722,9 @@ def generate_single_scenario(
                 "is_right_censored": is_right_censored,
                 "is_left_censored": is_left_censored,
                 "has_dropout_burst": is_active_dropout,
+                "past_curtailment_count": len(past_curtailments),
             }
+            row_data.update(limit_labels)
             row_data.update(feat_map)
             rows.append(row_data)
 
@@ -704,7 +764,7 @@ def generate_full_dataset(
         seed = base_seed + sc_id * 100
         jobs.append((sc_id, fac, seed, records_per_scenario))
 
-    results = joblib.Parallel(n_jobs=n_jobs)(
+    results = joblib.Parallel(n_jobs=n_jobs, prefer="threads")(
         joblib.delayed(generate_single_scenario)(sc_id, fac, seed, recs)
         for sc_id, fac, seed, recs in jobs
     )
@@ -766,6 +826,267 @@ def split_dataset_by_scenario(
     test_df = df[df["scenario_id"].isin(test_set)].copy()
 
     return train_df, calib_df, test_df
+
+
+def build_seed_manifest(
+    calibrated_facilities: List[Facility],
+    output_path: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """Construct deterministic seed manifest mapping scenario IDs and seeds across all roles.
+
+    Roles:
+      - train: 300 scenarios (seeds 10000..10299)
+      - calib: 100 scenarios (seeds 10300..10399)
+      - test: 100 scenarios (seeds 10400..10499)
+      - calib_extra: 900 scenarios (seeds 20000..20899, 150 per facility)
+      - redteam: 1600 scenarios (FAC-VAX-03 x 600 seeds 30000..30599, 5 others x 200 seeds 30600..31599)
+
+    Saves to models/artifacts/seed_manifest.json if output_path is provided.
+    """
+    fac_map = {f.id: f for f in calibrated_facilities}
+    fac_ids = sorted(fac_map.keys())
+    n_fac = len(fac_ids)
+
+    manifest: Dict[str, Any] = {
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "roles": {},
+        "total_scenarios": 0,
+        "disjoint_verified": False,
+    }
+
+    # 1. train (300)
+    train_seeds = []
+    train_facs = []
+    for sc_idx in range(300):
+        seed = 10000 + sc_idx
+        fac = fac_ids[sc_idx % n_fac]
+        train_seeds.append(seed)
+        train_facs.append(fac)
+    manifest["roles"]["train"] = {
+        "count": 300,
+        "seed_start": 10000,
+        "seed_end": 10299,
+        "seeds": train_seeds,
+        "facilities": {fid: train_facs.count(fid) for fid in fac_ids},
+    }
+
+    # 2. calib (100)
+    calib_seeds = []
+    calib_facs = []
+    for sc_idx in range(100):
+        seed = 10300 + sc_idx
+        fac = fac_ids[sc_idx % n_fac]
+        calib_seeds.append(seed)
+        calib_facs.append(fac)
+    manifest["roles"]["calib"] = {
+        "count": 100,
+        "seed_start": 10300,
+        "seed_end": 10399,
+        "seeds": calib_seeds,
+        "facilities": {fid: calib_facs.count(fid) for fid in fac_ids},
+    }
+
+    # 3. test (100)
+    test_seeds = []
+    test_facs = []
+    for sc_idx in range(100):
+        seed = 10400 + sc_idx
+        fac = fac_ids[sc_idx % n_fac]
+        test_seeds.append(seed)
+        test_facs.append(fac)
+    manifest["roles"]["test"] = {
+        "count": 100,
+        "seed_start": 10400,
+        "seed_end": 10499,
+        "seeds": test_seeds,
+        "facilities": {fid: test_facs.count(fid) for fid in fac_ids},
+    }
+
+    # 4. calib_extra (900: VAX-03 x 300, 5 others x 120 each)
+    extra_seeds = []
+    extra_facs = []
+    for sc_idx in range(300):
+        seed = 20000 + sc_idx
+        extra_seeds.append(seed)
+        extra_facs.append("FAC-VAX-03")
+    non_vax_fids = [fid for fid in fac_ids if fid != "FAC-VAX-03"]
+    curr_calib_seed = 20300
+    for fid in non_vax_fids:
+        for _ in range(120):
+            extra_seeds.append(curr_calib_seed)
+            extra_facs.append(fid)
+            curr_calib_seed += 1
+    manifest["roles"]["calib_extra"] = {
+        "count": 900,
+        "seed_start": 20000,
+        "seed_end": 20899,
+        "seeds": extra_seeds,
+        "facilities": {fid: extra_facs.count(fid) for fid in fac_ids},
+    }
+
+    # 5. redteam (1600: FAC-VAX-03 x 600, 5 others x 200)
+    red_seeds = []
+    red_facs = []
+    # VAX-03 (600)
+    for sc_idx in range(600):
+        seed = 30000 + sc_idx
+        red_seeds.append(seed)
+        red_facs.append("FAC-VAX-03")
+    # Remaining 5 facilities (200 each = 1,000)
+    non_vax_fids = [fid for fid in fac_ids if fid != "FAC-VAX-03"]
+    curr_seed = 30600
+    for fid in non_vax_fids:
+        for _ in range(200):
+            red_seeds.append(curr_seed)
+            red_facs.append(fid)
+            curr_seed += 1
+    manifest["roles"]["redteam"] = {
+        "count": 1600,
+        "seed_start": 30000,
+        "seed_end": 31599,
+        "seeds": red_seeds,
+        "facilities": {fid: red_facs.count(fid) for fid in fac_ids},
+    }
+
+    manifest["total_scenarios"] = sum(r["count"] for r in manifest["roles"].values())
+    manifest["disjoint_verified"] = verify_seed_manifest_disjoint(manifest)
+
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            json.dump(manifest, f, indent=2)
+
+    return manifest
+
+
+def verify_seed_manifest_disjoint(manifest: Dict[str, Any]) -> bool:
+    """Verify that all seed sets across roles in the manifest are strictly pairwise disjoint."""
+    seen_seeds: set[int] = set()
+    for role_name, role_info in manifest["roles"].items():
+        role_seeds = set(role_info["seeds"])
+        if not seen_seeds.isdisjoint(role_seeds):
+            overlap = seen_seeds.intersection(role_seeds)
+            raise ValueError(f"Seed manifest conflict in role '{role_name}': overlapping seeds {overlap}")
+        seen_seeds.update(role_seeds)
+    return True
+
+
+def generate_calib_extra_dataset(
+    calibrated_facilities: List[Facility],
+    n_scenarios: int = 900,
+    records_per_scenario: int = 20,
+    base_seed: int = 20000,
+    n_jobs: int = -1,
+) -> pd.DataFrame:
+    """Generate 900 extra calibration scenarios (FAC-VAX-03 x 300, 5 others x 120 each)."""
+    for fac in calibrated_facilities:
+        validate_nominal_facility(fac)
+
+    vax_fac = next(f for f in calibrated_facilities if f.id == "FAC-VAX-03")
+    other_facs = [f for f in calibrated_facilities if f.id != "FAC-VAX-03"]
+
+    jobs = []
+    # VAX-03 (300)
+    for sc_id in range(300):
+        seed = base_seed + sc_id
+        jobs.append((sc_id, vax_fac, seed, records_per_scenario, False))
+
+    curr_seed = base_seed + 300
+    sc_counter = 300
+    for fac in other_facs:
+        for _ in range(120):
+            jobs.append((sc_counter, fac, curr_seed, records_per_scenario, False))
+            curr_seed += 1
+            sc_counter += 1
+
+    results = joblib.Parallel(n_jobs=n_jobs, prefer="threads")(
+        joblib.delayed(generate_single_scenario)(sc_id, fac, seed, recs, severe)
+        for sc_id, fac, seed, recs, severe in jobs
+    )
+    all_rows = [row for scenario_rows in results for row in scenario_rows]
+    return pd.DataFrame(all_rows)
+
+
+def generate_red_team_dataset(
+    calibrated_facilities: List[Facility],
+    n_scenarios: int = 1600,
+    records_per_scenario: int = 20,
+    base_seed: int = 30000,
+    n_jobs: int = -1,
+) -> pd.DataFrame:
+    """Generate high-stress adversarial red-team scenarios (1,600 scenarios).
+
+    Stratification:
+      - FAC-VAX-03: 600 scenarios (seeds 30000..30599)
+      - Remaining 5 facilities: 200 scenarios each = 1,000 scenarios (seeds 30600..31599)
+      Total = 1,600 scenarios.
+
+    Oversamples severe operational conditions:
+      - Extreme ambient heat: 38 °C to 44 °C
+      - Frequent door openings: 6 to 12 openings per hour
+      - High loading fraction (slow recovery)
+      - Past curtailments ending shortly before 'now'
+      - Stratified across cut-in (warmest) phases
+    """
+    for fac in calibrated_facilities:
+        validate_nominal_facility(fac)
+
+    vax_fac = next(f for f in calibrated_facilities if f.id == "FAC-VAX-03")
+    other_facs = [f for f in calibrated_facilities if f.id != "FAC-VAX-03"]
+
+    jobs = []
+    # VAX-03 (600)
+    for sc_id in range(600):
+        seed = base_seed + sc_id
+        jobs.append((sc_id, vax_fac, seed, records_per_scenario, True))
+
+    # Remaining 5 facilities (200 each = 1000)
+    curr_seed = base_seed + 600
+    sc_counter = 600
+    for fac in other_facs:
+        for _ in range(200):
+            jobs.append((sc_counter, fac, curr_seed, records_per_scenario, True))
+            curr_seed += 1
+            sc_counter += 1
+
+    results = joblib.Parallel(n_jobs=n_jobs, prefer="threads")(
+        joblib.delayed(generate_single_scenario)(sc_id, fac, seed, recs, severe)
+        for sc_id, fac, seed, recs, severe in jobs
+    )
+
+    all_rows = [row for scenario_rows in results for row in scenario_rows]
+    return pd.DataFrame(all_rows)
+
+
+def generate_vax_red_team_dataset(
+    vax_facility: Facility,
+    n_scenarios: int = 600,
+    records_per_scenario: int = 20,
+    base_seed: int = 30000,
+    n_jobs: int = -1,
+) -> pd.DataFrame:
+    """Generate high-stress adversarial red-team scenarios for FAC-VAX-03.
+
+    Oversamples severe operational conditions:
+      - Extreme ambient heat: 38 °C to 44 °C
+      - Frequent door openings: 6 to 12 openings per hour
+      - High loading fraction (slow recovery)
+      - Past curtailments ending shortly before 'now'
+      - Stratified across cut-in (warmest) phases
+    """
+    validate_nominal_facility(vax_facility)
+    jobs = []
+    for sc_id in range(n_scenarios):
+        seed = base_seed + sc_id
+        jobs.append((sc_id, vax_facility, seed, records_per_scenario, True))
+
+    results = joblib.Parallel(n_jobs=n_jobs, prefer="threads")(
+        joblib.delayed(generate_single_scenario)(sc_id, vax_facility, seed, recs, severe)
+        for sc_id, vax_facility, seed, recs, severe in jobs
+    )
+
+    all_rows = [row for scenario_rows in results for row in scenario_rows]
+    return pd.DataFrame(all_rows)
 
 
 # ============================================================================
@@ -877,6 +1198,13 @@ Curtailment duration labels are subject to operational boundary censoring:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Chill2Grid reality-gap dataset.")
     parser.add_argument("--quick", action="store_true", help="Generate small fast dataset (60 scenarios)")
+    parser.add_argument(
+        "--role",
+        type=str,
+        default="default",
+        choices=["default", "calib_extra", "redteam", "all"],
+        help="Specific dataset role to generate",
+    )
     args = parser.parse_args()
 
     project_root = Path(__file__).resolve().parent.parent
@@ -885,37 +1213,59 @@ if __name__ == "__main__":
         cal_csv = project_root / "data" / "facilities.csv"
 
     facilities = load_facilities_from_csv(cal_csv)
-    n_sc = 60 if args.quick else 500
+    safety_dir = project_root / "data" / "safety"
+    safety_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = safety_dir / "seed_manifest.json"
+    manifest = build_seed_manifest(facilities, output_path=manifest_path)
+    print(f"Seed manifest written and verified disjoint ({manifest['total_scenarios']} total scenarios) -> {manifest_path}")
 
-    print("=" * 70)
-    print(f"OBSERVABLE FEATURES LIST (Total Count = {len(OBSERVABLE_FEATURES)}):")
-    for idx, feat in enumerate(OBSERVABLE_FEATURES, 1):
-        print(f"  {idx:2d}. {feat}")
-    print("=" * 70)
+    if args.role == "calib_extra":
+        n_sc = 60 if args.quick else 900
+        print(f"Generating calib_extra role ({n_sc} scenarios: VAX-03 x {n_sc//3}, 5 others x {n_sc*2//15})...")
+        df_calib_extra = generate_calib_extra_dataset(facilities, n_scenarios=n_sc, n_jobs=-1)
+        out_path = safety_dir / "calib_extra.csv"
+        df_calib_extra.to_csv(out_path, index=False)
+        print(f"calib_extra dataset saved to: {out_path} ({len(df_calib_extra)} rows, simulated)")
 
-    print(f"Generating {n_sc} scenarios ({'quick mode' if args.quick else 'full mode'}) across {len(facilities)} facilities...")
-    df = generate_full_dataset(facilities, n_scenarios=n_sc, n_jobs=-1)
-    print(f"Generated {len(df)} total rows across {len(FORECAST_HORIZONS)} horizons.")
+    elif args.role == "redteam":
+        n_sc = 160 if args.quick else 1600
+        print(f"Generating redteam role ({n_sc} scenarios: VAX-03 x {n_sc*3//8}, 5 others x {n_sc//8})...")
+        df_redteam = generate_red_team_dataset(facilities, n_scenarios=n_sc, n_jobs=-1)
+        out_path = safety_dir / "redteam.csv"
+        df_redteam.to_csv(out_path, index=False)
+        print(f"redteam dataset saved to: {out_path} ({len(df_redteam)} rows, simulated)")
 
-    # Save sample & config
-    train_dir = project_root / "data" / "training"
-    train_dir.mkdir(parents=True, exist_ok=True)
-    sample_df = df.sample(n=min(20000, len(df)), random_state=42)
-    sample_path = train_dir / "sample.csv"
-    sample_df.to_csv(sample_path, index=False)
-    print(f"Saved {len(sample_df)} sample rows to: {sample_path}")
+    elif args.role in ("default", "all"):
+        n_sc = 60 if args.quick else 500
+        print("=" * 70)
+        print(f"OBSERVABLE FEATURES LIST (Total Count = {len(OBSERVABLE_FEATURES)}):")
+        for idx, feat in enumerate(OBSERVABLE_FEATURES, 1):
+            print(f"  {idx:2d}. {feat}")
+        print("=" * 70)
 
-    config = {
-        "n_scenarios": n_sc,
-        "total_rows": len(df),
-        "horizons": FORECAST_HORIZONS,
-        "n_observable_features": len(OBSERVABLE_FEATURES),
-        "base_seed": 42,
-    }
-    with open(train_dir / "config.json", "w") as f:
-        json.dump(config, f, indent=2)
+        print(f"Generating {n_sc} scenarios ({'quick mode' if args.quick else 'full mode'}) across {len(facilities)} facilities...")
+        df = generate_full_dataset(facilities, n_scenarios=n_sc, n_jobs=-1)
+        print(f"Generated {len(df)} total rows across {len(FORECAST_HORIZONS)} horizons.")
 
-    # Generate data quality report
-    out_dir = project_root / "outputs" / "part3"
-    generate_data_quality_report(df, out_dir)
-    print(f"Data quality report generated in {out_dir}")
+        # Save sample & config
+        train_dir = project_root / "data" / "training"
+        train_dir.mkdir(parents=True, exist_ok=True)
+        sample_df = df.sample(n=min(20000, len(df)), random_state=42)
+        sample_path = train_dir / "sample.csv"
+        sample_df.to_csv(sample_path, index=False)
+        print(f"Saved {len(sample_df)} sample rows to: {sample_path}")
+
+        config = {
+            "n_scenarios": n_sc,
+            "total_rows": len(df),
+            "horizons": FORECAST_HORIZONS,
+            "n_observable_features": len(OBSERVABLE_FEATURES),
+            "base_seed": 42,
+        }
+        with open(train_dir / "config.json", "w") as f:
+            json.dump(config, f, indent=2)
+
+        # Generate data quality report
+        out_dir = project_root / "outputs" / "part3"
+        generate_data_quality_report(df, out_dir)
+        print(f"Data quality report generated in {out_dir}")

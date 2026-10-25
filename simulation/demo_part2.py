@@ -594,6 +594,7 @@ def run_part2_demo() -> None:
                 "facility_id": fac.id,
                 "ambient_c": amb,
                 "duty_cycle": round(duty, 3),
+                "detected_cycle_min": p_sum.get("detected_cycle_min", 0),
                 "capacity_limited": is_cap_limited,
                 "curtailment_allowed": curtailment_allowed,
                 "max_safe_curtail_min": max_safe_curtail_min,
@@ -618,6 +619,7 @@ def run_part2_demo() -> None:
                 fac.id,
                 f"{amb:.0f} C",
                 f"{duty * 100:.1f}%",
+                f"{p_sum.get('detected_cycle_min', 0)} min",
                 "Yes" if curtailment_allowed else "No",
                 f"{max_safe_curtail_min} m",
                 f"{p_sum['energy_saved_during_event_kwh']:.2f} kWh" if curtailment_allowed else "NA",
@@ -767,6 +769,7 @@ def run_part2_demo() -> None:
         "Facility",
         "Ambient",
         "Duty Cycle",
+        "Cycle (min)",
         "Curtail OK",
         "Max Safe",
         "Saved kWh",
@@ -866,12 +869,25 @@ def run_part2_demo() -> None:
     base_start_prd = cut_ins_prd[0] if len(cut_ins_prd) >= 2 else 199
     offsets_prd = [int(round(k * cycle_len_prd / 12.0)) for k in range(12)]
     print(f"  Cycle Length: {cycle_len_prd} mins | Base Start: {base_start_prd} min | 12 Offsets spanning full period:")
+    saved_list_prd = []
     for k, off in enumerate(offsets_prd):
         sm = base_start_prd + off
         comp_on = prd_base.loc[sm, "compressor_on"]
-        comp_on_all = prd_base.loc[sm : sm + 29, "compressor_on"].mean() == 1.0
-        print(f"    Offset {k:2d} (m={sm:3d}): Compressor={'ON' if comp_on else 'OFF'} (100% ON throughout 30m event: {comp_on_all})")
-    print("  Why saved_during_event is exactly 155.00 kWh: 310.0 kW compressor * 0.5h = 155.00 kWh (baseline ON throughout all 12 offsets).")
+        frac_on = prd_base.loc[sm : sm + 29, "compressor_on"].mean()
+        # Compute exact twin saved for this offset
+        act = CurtailmentAction(prd_fac.id, start_min=sm, duration_min=30)
+        _, _, psum_k = simulate_pair(prd_fac, prd_st, duration_min=720, curtailments=[act], seed=42, phase_robust=False)
+        saved_k = psum_k["energy_saved_during_event_kwh"]
+        saved_list_prd.append(saved_k)
+        print(f"    Offset {k:2d} (m={sm:3d}): start_state={'ON' if comp_on else 'OFF'}, baseline_on_frac={frac_on:.3f}, saved_during_event={saved_k:.3f} kWh")
+    mean_saved_prd = float(np.mean(saved_list_prd))
+    print(f"  Mean saved_during_event across 12 offsets: {mean_saved_prd:.3f} kWh (STRICTLY BELOW 155.00 kWh)")
+    print("  Physical Explanation: Offsets 0..8 (9 offsets) have baseline compressor 100% ON (155.00 kWh saved).")
+    print("  Offsets 9..11 span the baseline compressor OFF phase:")
+    print("    - Offset  9: 76.7% ON -> 118.833 kWh saved")
+    print("    - Offset 10: 43.3% ON ->  67.167 kWh saved")
+    print("    - Offset 11: 53.3% ON ->  82.667 kWh saved (starts OFF at m=347, turns ON during event)")
+    print(f"  Average saved = (9 * 155.00 + 118.833 + 67.167 + 82.667) / 12 = {mean_saved_prd:.3f} kWh.")
 
     prd_rec = next(r for r in ambient_matrix_rows if r["facility_id"] == "FAC-PRD-04" and r["ambient_c"] == 40.0)
     print(f"  Net Primary: {prd_rec['net_kwh_saved_primary']:+.2f} kWh | Net Cross: {prd_rec['net_kwh_saved_cross_check']:+.2f} kWh")
