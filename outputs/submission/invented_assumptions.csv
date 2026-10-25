@@ -1,0 +1,45 @@
+Category,Parameter,Source File,Code Location,Exact Code Value,Units,Description
+Reality Gap: Physical Structure,Insulation Resistance (R) Multiplier Range,simulation/reality_gap.py,make_world_facility (line 38),"[0.90, 1.10]",multiplier (dimensionless),Uniform random perturbation range (+-10%) applied to nominal facility envelope R
+Reality Gap: Physical Structure,Thermal Mass (C) Multiplier Range,simulation/reality_gap.py,make_world_facility (line 39),"[0.90, 1.10]",multiplier (dimensionless),Uniform random perturbation range (+-10%) applied to nominal facility thermal capacitance C
+Reality Gap: Unmodelled Disturbance,AR(1) Disturbance Persistence (phi),simulation/reality_gap.py,make_disturbance (line 82),0.85,coefficient (dimensionless),Autoregressive persistence coefficient for background stochastic heat ingress
+Reality Gap: Unmodelled Disturbance,Disturbance Standard Deviation Target,simulation/reality_gap.py,make_disturbance (line 81),"max(0.5, 0.03 * abs(mean_wall_heat_kw))",kW,"Target standard deviation of heat disturbance (~3% of envelope heat ingress, floor 0.5 kW)"
+Reality Gap: Unmodelled Disturbance,Intermittent Step Probability,simulation/reality_gap.py,make_disturbance (line 95),0.012,probability / minute,Poisson-like probability of loading dock / forklift door burst heat steps
+Reality Gap: Unmodelled Disturbance,Intermittent Step Duration Range,simulation/reality_gap.py,make_disturbance (line 96),"[5, 15]",minutes,Duration range of intermittent loading dock heat pulses
+Safety Tier: CRITICAL,CRITICAL Guard Margin,safety/rules.py,TIER_CRITICAL.guard_margin_c,0.7,deg C,Soft guard safety buffer below max safe limit for CRITICAL facilities
+Safety Tier: CRITICAL,CRITICAL Abort Margin,safety/rules.py,TIER_CRITICAL.abort_margin_c,0.5,deg C,Closed-loop runtime monitor emergency cooling trip margin for CRITICAL
+Safety Tier: CRITICAL,CRITICAL Max Single Curtailment,safety/rules.py,TIER_CRITICAL.max_single_curtailment_min,20.0,minutes,Hard upper bound on single continuous curtailment duration for CRITICAL
+Safety Tier: CRITICAL,CRITICAL Restart Lag,safety/rules.py,TIER_CRITICAL.restart_lag_min,3.0,minutes,Compressor turnaround delay assumed before refrigeration becomes effective
+Safety Tier: CRITICAL,CRITICAL Calibrated Lambda (Key 2),safety/rules.py,TIER_CRITICAL.calibrated_lambda,0.45,"scalar in [0, 1]",Calibrated pessimism scalar balancing nominal twin and conservative envelope
+Safety Tier: CRITICAL,CRITICAL Tripwire Lockout Ambient,safety/rules.py,TIER_CRITICAL.tripwire_lockout_ambient_c,35.0,deg C,Outdoor temperature threshold triggering automatic fail-closed lockout
+Safety Tier: HIGH,HIGH Guard Margin,safety/rules.py,TIER_HIGH.guard_margin_c,0.3,deg C,Soft guard safety buffer below max safe limit for HIGH facilities
+Safety Tier: HIGH,HIGH Abort Margin,safety/rules.py,TIER_HIGH.abort_margin_c,0.2,deg C,Closed-loop runtime monitor emergency cooling trip margin for HIGH
+Safety Tier: HIGH,HIGH Max Single Curtailment,safety/rules.py,TIER_HIGH.max_single_curtailment_min,45.0,minutes,Hard upper bound on single continuous curtailment duration for HIGH
+Safety Tier: HIGH,HIGH Restart Lag,safety/rules.py,TIER_HIGH.restart_lag_min,2.0,minutes,Compressor turnaround delay assumed before refrigeration becomes effective
+Safety Tier: HIGH,HIGH Calibrated Lambda (Key 2),safety/rules.py,TIER_HIGH.calibrated_lambda,0.4,"scalar in [0, 1]",Calibrated pessimism scalar balancing nominal twin and conservative envelope
+Safety Tier: HIGH,HIGH Tripwire Lockout Ambient,safety/rules.py,TIER_HIGH.tripwire_lockout_ambient_c,42.0,deg C,Outdoor temperature threshold triggering automatic fail-closed lockout
+Safety Tier: STANDARD,STANDARD Guard Margin,safety/rules.py,TIER_STANDARD.guard_margin_c,0.2,deg C,Soft guard safety buffer below max safe limit for STANDARD facilities
+Safety Tier: STANDARD,STANDARD Abort Margin,safety/rules.py,TIER_STANDARD.abort_margin_c,0.15,deg C,Closed-loop runtime monitor emergency cooling trip margin for STANDARD
+Safety Tier: STANDARD,STANDARD Max Single Curtailment,safety/rules.py,TIER_STANDARD.max_single_curtailment_min,60.0,minutes,Hard upper bound on single continuous curtailment duration for STANDARD
+Safety Tier: STANDARD,STANDARD Restart Lag,safety/rules.py,TIER_STANDARD.restart_lag_min,2.0,minutes,Compressor turnaround delay assumed before refrigeration becomes effective
+Safety Tier: STANDARD,STANDARD Calibrated Lambda (Key 2),safety/rules.py,TIER_STANDARD.calibrated_lambda,0.4,"scalar in [0, 1]",Calibrated pessimism scalar balancing nominal twin and conservative envelope
+Safety Tier: STANDARD,STANDARD Tripwire Lockout Ambient,safety/rules.py,TIER_STANDARD.tripwire_lockout_ambient_c,None,deg C,Outdoor temperature threshold triggering automatic fail-closed lockout
+Facility Bounds: FAC-FZN-01,FAC-FZN-01 Min Operating Temp,data/facilities.csv,min_temp_c for FAC-FZN-01,-22.0,deg C,Lower operating thermostat setpoint for Apex Cold Hub - Frozen Meat & Veg
+Facility Bounds: FAC-FZN-01,FAC-FZN-01 Max Safe Limit,data/facilities.csv,max_safe_temp_c for FAC-FZN-01,-18.0,deg C,Absolute maximum allowable product air temperature for Apex Cold Hub - Frozen Meat & Veg
+Facility Bounds: FAC-FZN-01,FAC-FZN-01 Rated Power,data/facilities.csv,rated_power_kw for FAC-FZN-01,220.0,kW,Nameplate electrical compressor rated power for Apex Cold Hub - Frozen Meat & Veg
+Facility Bounds: FAC-ICE-02,FAC-ICE-02 Min Operating Temp,data/facilities.csv,min_temp_c for FAC-ICE-02,-26.0,deg C,Lower operating thermostat setpoint for Polar Arctic Ice Cream Logistics
+Facility Bounds: FAC-ICE-02,FAC-ICE-02 Max Safe Limit,data/facilities.csv,max_safe_temp_c for FAC-ICE-02,-22.0,deg C,Absolute maximum allowable product air temperature for Polar Arctic Ice Cream Logistics
+Facility Bounds: FAC-ICE-02,FAC-ICE-02 Rated Power,data/facilities.csv,rated_power_kw for FAC-ICE-02,120.0,kW,Nameplate electrical compressor rated power for Polar Arctic Ice Cream Logistics
+Facility Bounds: FAC-VAX-03,FAC-VAX-03 Min Operating Temp,data/facilities.csv,min_temp_c for FAC-VAX-03,2.0,deg C,Lower operating thermostat setpoint for BioCare National Pharma Vault
+Facility Bounds: FAC-VAX-03,FAC-VAX-03 Max Safe Limit,data/facilities.csv,max_safe_temp_c for FAC-VAX-03,6.5,deg C,Absolute maximum allowable product air temperature for BioCare National Pharma Vault
+Facility Bounds: FAC-VAX-03,FAC-VAX-03 Rated Power,data/facilities.csv,rated_power_kw for FAC-VAX-03,45.0,kW,Nameplate electrical compressor rated power for BioCare National Pharma Vault
+Facility Bounds: FAC-PRD-04,FAC-PRD-04 Min Operating Temp,data/facilities.csv,min_temp_c for FAC-PRD-04,1.0,deg C,Lower operating thermostat setpoint for Kisan Mega Fresh Agricultural Terminal
+Facility Bounds: FAC-PRD-04,FAC-PRD-04 Max Safe Limit,data/facilities.csv,max_safe_temp_c for FAC-PRD-04,5.5,deg C,Absolute maximum allowable product air temperature for Kisan Mega Fresh Agricultural Terminal
+Facility Bounds: FAC-PRD-04,FAC-PRD-04 Rated Power,data/facilities.csv,rated_power_kw for FAC-PRD-04,310.0,kW,Nameplate electrical compressor rated power for Kisan Mega Fresh Agricultural Terminal
+Facility Bounds: FAC-SEA-05,FAC-SEA-05 Min Operating Temp,data/facilities.csv,min_temp_c for FAC-SEA-05,-24.0,deg C,Lower operating thermostat setpoint for OceanBreeze Port Marine Export Hub
+Facility Bounds: FAC-SEA-05,FAC-SEA-05 Max Safe Limit,data/facilities.csv,max_safe_temp_c for FAC-SEA-05,-19.0,deg C,Absolute maximum allowable product air temperature for OceanBreeze Port Marine Export Hub
+Facility Bounds: FAC-SEA-05,FAC-SEA-05 Rated Power,data/facilities.csv,rated_power_kw for FAC-SEA-05,180.0,kW,Nameplate electrical compressor rated power for OceanBreeze Port Marine Export Hub
+Facility Bounds: FAC-MLK-06,FAC-MLK-06 Min Operating Temp,data/facilities.csv,min_temp_c for FAC-MLK-06,1.5,deg C,Lower operating thermostat setpoint for Ganga Valley Cooperative Dairy Plant
+Facility Bounds: FAC-MLK-06,FAC-MLK-06 Max Safe Limit,data/facilities.csv,max_safe_temp_c for FAC-MLK-06,4.0,deg C,Absolute maximum allowable product air temperature for Ganga Valley Cooperative Dairy Plant
+Facility Bounds: FAC-MLK-06,FAC-MLK-06 Rated Power,data/facilities.csv,rated_power_kw for FAC-MLK-06,85.0,kW,Nameplate electrical compressor rated power for Ganga Valley Cooperative Dairy Plant
+Grid Assumptions (Illustrative),TOU Electricity Tariff Range,assumptions/grid_assumptions.csv,tariff_inr_per_kwh column,"[4.0, 13.0]",INR / kWh,Illustrative 24-hour time-of-use tariff placeholder curve (off-peak to peak)
+Grid Assumptions (Illustrative),Marginal Grid CO2 Intensity Range,assumptions/grid_assumptions.csv,grid_co2_g_per_kwh column,"[560.0, 850.0]",g CO2 / kWh,Illustrative 24-hour marginal grid carbon intensity placeholder curve

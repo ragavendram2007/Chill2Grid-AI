@@ -137,3 +137,45 @@ def test_contracts_integrity():
     assert "class Facility:" in content
     assert "class CurtailmentAction:" in content
     assert "class FacilityState:" in content
+
+
+def test_invented_assumptions_match_code_constants():
+    """Requirement 1: Invented assumptions table matches live code constants exactly."""
+    from safety.rules import RISK_TIERS
+    from core.contracts import load_facilities_from_csv
+
+    ass_path = PROJECT_ROOT / "outputs" / "part4" / "invented_assumptions.csv"
+    assert ass_path.is_file(), "invented_assumptions.csv missing"
+    df = pd.read_csv(ass_path)
+    assert len(df) >= 30, f"Expected comprehensive assumptions table, got {len(df)} rows"
+
+    # 1. Verify reality gap constants match code
+    r_row = df[df["Parameter"].str.contains("Insulation Resistance", na=False)].iloc[0]
+    assert r_row["Exact Code Value"] == "[0.90, 1.10]"
+
+    # 2. Verify tier guard margins match rules.py
+    for tier_name, tier_cfg in RISK_TIERS.items():
+        sub = df[(df["Category"] == f"Safety Tier: {tier_name}") & (df["Parameter"].str.contains("Guard Margin"))]
+        assert len(sub) == 1
+        assert float(sub.iloc[0]["Exact Code Value"]) == pytest.approx(tier_cfg.guard_margin_c)
+
+    # 3. Verify facility max safe limits match facilities.csv
+    facs = load_facilities_from_csv(PROJECT_ROOT / "data" / "facilities.csv")
+    for f in facs:
+        sub = df[(df["Category"] == f"Facility Bounds: {f.id}") & (df["Parameter"].str.contains("Max Safe Limit"))]
+        assert len(sub) == 1
+        assert float(sub.iloc[0]["Exact Code Value"]) == pytest.approx(f.max_safe_temp_c)
+
+
+def test_dashboard_offline_static_html_and_selfcheck():
+    """Requirements 5 & 6: Verify static dashboard is standalone offline (>50KB, no external CDN)."""
+    from app.build_html import build_static_html
+
+    html_path = build_static_html()
+    assert html_path.is_file()
+    size = html_path.stat().st_size
+    assert size > 50_000, f"Static HTML size ({size} bytes) must be > 50 KB"
+    content = html_path.read_text(encoding="utf-8")
+    assert "cdn.plot.ly" not in content, "cdn.plot.ly forbidden in offline static dashboard"
+    assert "<script src=" not in content, "External scripts forbidden in offline static dashboard"
+

@@ -118,12 +118,16 @@ def run_selfcheck() -> bool:
         checklist.append((f"Impact assessment: {e}", "FAIL", time.time() - t0))
         overall_success = False
 
-    # 6. Build Static HTML Dashboard
+    # 6. Build Static HTML Dashboard & Verify Standalone Offline (> 50 KB)
     t0 = time.time()
     try:
         html_path = build_static_html()
-        assert html_path.is_file()
-        checklist.append(("Build static HTML dashboard", "PASS", time.time() - t0))
+        assert html_path.is_file(), "Static HTML file missing"
+        size = html_path.stat().st_size
+        assert size > 50_000, f"Static HTML size ({size} bytes) must be > 50 KB"
+        content = html_path.read_text(encoding="utf-8")
+        assert "<script src=" not in content, "Static HTML must have zero external script references"
+        checklist.append((f"Static dashboard (>50KB, offline: {size/1024:.1f} KB)", "PASS", time.time() - t0))
     except Exception as e:
         checklist.append((f"Static dashboard: {e}", "FAIL", time.time() - t0))
         overall_success = False
